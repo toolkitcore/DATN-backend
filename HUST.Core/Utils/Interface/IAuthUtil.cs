@@ -22,7 +22,7 @@ namespace HUST.Core.Utils
         /// Lấy id user đang đăng nhập
         /// </summary>
         /// <returns></returns>
-        string GetCurrentUserId();
+        Guid? GetCurrentUserId();
 
     }
 }
