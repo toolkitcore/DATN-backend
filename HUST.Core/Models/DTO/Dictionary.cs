@@ -4,15 +4,15 @@ using System;
 namespace HUST.Core.Models.DTO
 {
     /// <summary>
-    /// Bảng user_setting: Bảng thông tin cấu hình của người dùng
+    /// Bảng dictionary: Bảng chứa thông tin dictionary
     /// </summary>
-    public class UserSetting : BaseDTO
+    public class Dictionary : BaseDTO
     {
         /// <summary>
         /// Id khóa chính
         /// </summary>
         [Key]
-        public Guid UserSettingId { get; set; }
+        public Guid DictionaryId { get; set; }
 
         /// <summary>
         /// Id người dùng
@@ -20,13 +20,13 @@ namespace HUST.Core.Models.DTO
         public Guid? UserId { get; set; }
 
         /// <summary>
-        /// Key
+        /// Tên
         /// </summary>
-        public string SettingKey { get; set; }
+        public string DictionaryName { get; set; }
 
         /// <summary>
-        /// Value
+        /// Lần cuối truy cập
         /// </summary>
-        public string SettingValue { get; set; }
+        public DateTime? LastViewAt { get; set; }
     }
 }
