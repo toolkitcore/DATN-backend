@@ -56,7 +56,7 @@ namespace HUST.Core.Utils
 
         public void LogError(Exception ex, string msg)
         {
-            _logger.Log(LogLevel.Error, msg, ex);
+            _logger.Log(LogLevel.Error, ex, msg);
         }
 
         #endregion
