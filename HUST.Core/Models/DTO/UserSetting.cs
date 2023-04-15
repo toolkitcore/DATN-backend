@@ -1,63 +1,62 @@
 ﻿using Dapper.Contrib.Extensions;
 using System;
 
-namespace HUST.Core.Models.Entity
+namespace HUST.Core.Models.DTO
 {
     /// <summary>
     /// Bảng user: Bảng thông tin user
     /// </summary>
-    [System.ComponentModel.DataAnnotations.Schema.Table("user")]
-    public class user : BaseEntity
+    public class User : BaseDTO
     {
         /// <summary>
         /// Id khóa chính
         /// </summary>
-        [System.ComponentModel.DataAnnotations.Key, ExplicitKey]
-        public Guid user_id { get; set; }
+        [Key]
+        public Guid UserId { get; set; }
 
         /// <summary>
         /// Tên đăng nhập
         /// </summary>
-        public string user_name { get; set; }
+        public string UserName { get; set; }
 
         /// <summary>
         /// Mật khẩu
         /// </summary>
-        public string password { get; set; }
+        public string Password { get; set; }
 
         /// <summary>
         /// Email
         /// </summary>
-        public string email { get; set; }
+        public string Email { get; set; }
 
         /// <summary>
         /// Tên đầy đủ
         /// </summary>
-        public string full_name { get; set; }
+        public string FullName { get; set; }
 
         /// <summary>
         /// Tên hiển thị
         /// </summary>
-        public string display_name { get; set; }
+        public string DisplayName { get; set; }
 
         /// <summary>
         /// Vị trí, công việc
         /// </summary>
-        public string position { get; set; }
+        public string Position { get; set; }
 
         /// <summary>
         /// Ngày sinh
         /// </summary>
-        public DateTime? birthday { get; set; }
+        public DateTime? Birthday { get; set; }
 
         /// <summary>
         /// Link avatar
         /// </summary>
-        public string avatar { get; set; }
+        public string Avatar { get; set; }
 
         /// <summary>
         /// Trạng thái
         /// </summary>
-        public int? status { get; set; }
+        public int? Status { get; set; }
     }
 }

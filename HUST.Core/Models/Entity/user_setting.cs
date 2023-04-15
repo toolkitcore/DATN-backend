@@ -1,32 +1,33 @@
 ﻿using Dapper.Contrib.Extensions;
 using System;
 
-namespace HUST.Core.Models.DTO
+namespace HUST.Core.Models.Entity
 {
     /// <summary>
     /// Bảng user_setting: Bảng thông tin cấu hình của người dùng
     /// </summary>
-    public class UserSetting : BaseDTO
+    [System.ComponentModel.DataAnnotations.Schema.Table("user_setting")]
+    public class user_setting : BaseEntity
     {
         /// <summary>
         /// Id khóa chính
         /// </summary>
-        [Key]
-        public Guid UserSettingId { get; set; }
+        [System.ComponentModel.DataAnnotations.Key, ExplicitKey]
+        public Guid user_setting_id { get; set; }
 
         /// <summary>
         /// Id người dùng
         /// </summary>
-        public Guid? UserId { get; set; }
+        public Guid? user_id { get; set; }
 
         /// <summary>
         /// Key
         /// </summary>
-        public string SettingKey { get; set; }
+        public string setting_key { get; set; }
 
         /// <summary>
         /// Value
         /// </summary>
-        public string SettingValue { get; set; }
+        public string setting_value { get; set; }
     }
 }
