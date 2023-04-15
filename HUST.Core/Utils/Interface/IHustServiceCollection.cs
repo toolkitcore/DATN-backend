@@ -14,6 +14,7 @@ namespace HUST.Core.Utils
         public IAuthUtil AuthUtil { get; set; }
         public IDistributedCacheUtil CacheUtil { get; set; }
         public IMapper Mapper { get; set; }
+        public ILogUtil LogUtil { get; set; }
 
         public void HandleControllerException(IServiceResult serviceResult, Exception ex);
     }

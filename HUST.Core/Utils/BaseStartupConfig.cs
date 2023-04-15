@@ -63,6 +63,7 @@ namespace HUST.Core.Utils
             //services.AddTransient<IHustDistributedCache, HustRedisCache>();
             //services.AddTransient<DistributedCacheHelper>();
             services.AddTransient<IDistributedCacheUtil, DistributedCacheUtil>();
+            services.AddTransient<ILogUtil, LogUtil>();
             services.AddTransient<IHustServiceCollection, HustServiceCollection>();
         }
     }
