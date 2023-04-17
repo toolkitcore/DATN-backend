@@ -94,29 +94,6 @@ namespace HUST.Core.Utils
         }
 
         /// <summary>
-        /// Thêm object vào cache
-        /// </summary>
-        /// <param name="key">Cache key</param>
-        /// <param name="value">Giá trị cần cache</param>
-        /// <param name="timeout">Thời gian hết hạn</param>
-        /// <param name="isAbsoluteExpiraton"></param>
-        /// <returns></returns>
-        public void Set(string key, object value, TimeSpan timeout, bool isAbsoluteExpiraton = false)
-        {
-            key = $"{_environment.EnvironmentName}_{key}";
-            var options = new DistributedCacheEntryOptions();
-            if (isAbsoluteExpiraton)
-            {
-                options.SetAbsoluteExpiration(timeout);
-            }
-            else
-            {
-                options.SetSlidingExpiration(timeout);
-            }
-            _cache.Set(key, value.ToBytes(), options);
-        }
-
-        /// <summary>
         /// Xóa giá trị trong cache
         /// </summary>
         /// <param name="key"></param>
@@ -150,6 +127,30 @@ namespace HUST.Core.Utils
             return bytes.ToObject<T>();
         }
 
+
+        /// <summary>
+        /// Thêm object vào cache
+        /// </summary>
+        /// <param name="key">Cache key</param>
+        /// <param name="value">Giá trị cần cache</param>
+        /// <param name="timeout">Thời gian hết hạn</param>
+        /// <param name="isAbsoluteExpiraton"></param>
+        /// <returns></returns>
+        public void Set(string key, object value, TimeSpan timeout, bool isAbsoluteExpiraton = false)
+        {
+            key = $"{_environment.EnvironmentName}_{key}";
+            var options = new DistributedCacheEntryOptions();
+            if (isAbsoluteExpiraton)
+            {
+                options.SetAbsoluteExpiration(timeout);
+            }
+            else
+            {
+                options.SetSlidingExpiration(timeout);
+            }
+            _cache.Set(key, value.ToBytes(), options);
+        }
+
         /// <summary>
         /// Lấy object trong cache
         /// </summary>
@@ -160,6 +161,17 @@ namespace HUST.Core.Utils
             key = $"{_environment.EnvironmentName}_{key}";
             var bytes = _cache.Get(key);
             return bytes.ToObject<T>();
+        }
+
+        /// <summary>
+        /// Xóa giá trị trong cache
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public void Delete(string key)
+        {
+            key = $"{_environment.EnvironmentName}_{key}";
+            _cache.Remove(key);
         }
     }
 }

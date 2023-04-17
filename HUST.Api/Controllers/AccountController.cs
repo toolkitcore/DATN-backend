@@ -2,9 +2,11 @@
 using HUST.Core.Enums;
 using HUST.Core.Interfaces.Service;
 using HUST.Core.Models.DTO;
+using HUST.Core.Models.Param;
 using HUST.Core.Models.ServerObject;
 using HUST.Core.Utils;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
@@ -23,17 +25,14 @@ namespace HUST.Api.Controllers
     public class AccountController : BaseApiController
     {
         #region Fields
-        public readonly IHustServiceCollection ServiceCollection;
-        public readonly IConfiguration Configuration;
-
+        private readonly IAccountService _service;
         #endregion
 
         #region Constructors
 
-        public AccountController(IHustServiceCollection serviceCollection, IConfiguration configuration)
+        public AccountController(IHustServiceCollection serviceCollection, IAccountService service) : base(serviceCollection)
         {
-            ServiceCollection = serviceCollection;
-            Configuration = configuration;
+            _service = service;
         }
 
         #endregion
@@ -41,30 +40,34 @@ namespace HUST.Api.Controllers
         #region Methods
 
         [HttpPost("Login"), AllowAnonymous]
-        public async Task<IServiceResult> Login([FromBody]User user)
+        public async Task<IServiceResult> Login([FromBody]LoginParam param)
         {
             var res = new ServiceResult();
             try
             {
-                var fakeHash = SecurityUtil.HashPassword("12345678");
-
-                if (user.UserName == "hieu.pt183535@gmail.com" && SecurityUtil.VerifyPassword(user.Password, fakeHash))
-                {
-                    var token = SecurityUtil.GenerateToken(user, Configuration);
-                    res.OnSuccess(token);
-                    await this.ServiceCollection.CacheUtil.SetStringAsync($"AccessToken_{user.UserName}", token);
-                }
-                else
-                {
-                    res.OnError(ErrorCode.LoginErrorCode.WrongLoginInfo, "Email or password are incorrect.");
-                }
-
+                return await _service.Login(param.userName, param.password);
             }
             catch (Exception ex)
             {
                 this.ServiceCollection.HandleControllerException(res, ex);
             }
             
+            return res;
+        }
+
+        [HttpGet("Logout")]
+        public async Task<IServiceResult> Logout()
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.Logout();
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
             return res;
         }
 

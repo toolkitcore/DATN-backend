@@ -1,4 +1,8 @@
-﻿using HUST.Core.Utils;
+﻿using HUST.Core.Interfaces.Repository;
+using HUST.Core.Interfaces.Service;
+using HUST.Core.Services;
+using HUST.Core.Utils;
+using HUST.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -34,6 +38,9 @@ namespace HUST.Api
             BaseStartupConfig.ConfigureServices(ref services, Configuration);
 
             // Thiết lập Dependencies Inject
+            services.AddScoped<IAccountService, AccountService>();
+
+            services.AddScoped<IUserRepository, UserRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

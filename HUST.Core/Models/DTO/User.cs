@@ -58,5 +58,13 @@ namespace HUST.Core.Models.DTO
         /// Trạng thái
         /// </summary>
         public int? Status { get; set; }
+
+        #region Custom
+        /// <summary>
+        /// Id dictionary đang thao tác
+        /// </summary>
+        public Guid? DictionaryId { get; set; }
+
+        #endregion
     }
 }

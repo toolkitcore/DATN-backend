@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HUST.Core\HUST.Core.csproj" />
+    <ProjectReference Include="..\HUST.Infrastructure\HUST.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

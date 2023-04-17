@@ -13,54 +13,194 @@ namespace HUST.Core.Interfaces.Repository
     /// <typeparam name="TEntity">Lớp thực thể</typeparam>
     public interface IBaseRepository<TEntity> where TEntity: class
     {
+
+        #region Tạo kết nối
+        /// <summary>
+        /// Tạo kết nối
+        /// </summary>
+        /// <returns></returns>
+        IDbConnection CreateConnection();
+
+        /// <summary>
+        /// Tạo kết nối bất đồng bộ
+        /// </summary>
+        /// <returns></returns>
+        Task<IDbConnection> CreateConnectionAsync();
+        #endregion
+
+        #region Get by id
+        /// <summary>
+        /// Lấy ra đối tượng thực thể theo khóa chính(id)
+        /// </summary>
+        /// <param name="entityId">Khóa chính</param>
+        /// <param name="dbTransaction">transaction</param>
+        /// <returns>Đối tượng thực thể</returns>
+        Task<TEntity> Get(Guid entityId, IDbTransaction dbTransaction);
+
         /// <summary>
         /// Lấy ra đối tượng thực thể theo khóa chính(id)
         /// </summary>
         /// <param name="entityId">Khóa chính</param>
         /// <returns>Đối tượng thực thể</returns>
-        Task<TEntity> Get(Guid entityId, IDbTransaction dbTransaction = null);
+        Task<TEntity> Get(Guid entityId);
+        #endregion
+
+        #region Insert
+        /// <summary>
+        /// Thêm mới đối tượng thực thể
+        /// </summary>
+        /// <param name="entity">Đối tượng cần thêm mới</param>
+        /// <param name="dbTransaction">transaction</param> 
+        /// <returns>Kết quả thực hiện</returns>
+        Task<bool> Insert(TEntity entity, IDbTransaction dbTransaction);
+
+        /// <summary>
+        /// Thêm mới 1 list đối tượng thực thể
+        /// </summary>
+        /// <param name="entities">Danh sách bản ghi thêm mới</param>
+        /// <param name="dbTransaction">transaction</param> 
+        /// <returns>Kết quả thực hiện</returns>
+        Task<bool> Insert(IEnumerable<TEntity> entities, IDbTransaction dbTransaction);
 
         /// <summary>
         /// Thêm mới đối tượng thực thể
         /// </summary>
         /// <param name="entity">Đối tượng cần thêm mới</param>
-        /// <returns>Số bản ghi được thêm</returns>
-        Task<bool> Insert(TEntity entity, IDbTransaction dbTransaction = null);
+        /// <returns>Kết quả thực hiện</returns>
+        Task<bool> Insert(TEntity entity);
 
         /// <summary>
-        /// Thêm mới đối tượng thực thể
+        /// Thêm mới 1 list đối tượng thực thể
         /// </summary>
-        /// <param name="entity">Đối tượng cần thêm mới</param>
-        /// <returns>Số bản ghi được thêm</returns>
-        Task<bool> Insert(IEnumerable<TEntity> entities, IDbTransaction dbTransaction = null);
+        /// <param name="entities">Danh sách bản ghi thêm mới</param>
+        /// <returns>Kết quả thực hiện</returns>
+        Task<bool> Insert(IEnumerable<TEntity> entities);
+        #endregion
 
+        #region Update
         /// <summary>
-        /// Chỉnh sửa đối tượng thực thể
+        /// Cập nhật dữ liệu
         /// </summary>
         /// <param name="entity">Đối tượng cần chỉnh sửa</param>
-        /// <returns>Số bản ghi bị ảnh hưởng</returns>
-        Task<bool> Update(TEntity entity, IDbTransaction dbTransaction = null);
+        /// <param name="dbTransaction">transaction</param> 
+        /// <returns>Kết quả thực hiện</returns>
+        Task<bool> Update(TEntity entity, IDbTransaction dbTransaction);
 
         /// <summary>
-        /// Thêm mới đối tượng thực thể
+        /// Cập nhật dữ liệu
         /// </summary>
-        /// <param name="entity">Đối tượng cần thêm mới</param>
-        /// <returns>Số bản ghi được thêm</returns>
-        Task<bool> Update(IEnumerable<TEntity> entities, IDbTransaction dbTransaction = null);
-
-
-        /// <summary>
-        /// Xóa đối tượng thực thể theo khóa chính(id)
-        /// </summary>
-        /// <param name="entityId">Khóa chính</param>
-        /// <returns>Số bản ghi bị ảnh hưởng</returns>
-        Task<bool> Delete(TEntity entity, IDbTransaction dbTransaction = null);
+        /// <param name="entities">Danh sách bản ghi cập nhật</param>
+        /// <param name="dbTransaction">transaction</param>
+        /// <returns>Kết quả thực hiện</returns>
+        Task<bool> Update(IEnumerable<TEntity> entities, IDbTransaction dbTransaction);
 
         /// <summary>
-        /// Xóa đối tượng thực thể theo khóa chính(id)
+        /// Cập nhật dữ liệu
         /// </summary>
-        /// <param name="entityId">Khóa chính</param>
-        /// <returns>Số bản ghi bị ảnh hưởng</returns>
-        Task<bool> Delete(IEnumerable<TEntity> entities, IDbTransaction dbTransaction = null);
+        /// <param name="entity">Đối tượng cần chỉnh sửa</param>
+        /// <returns>Kết quả thực hiện</returns>
+        Task<bool> Update(TEntity entity);
+
+        /// <summary>
+        /// Cập nhật dữ liệu
+        /// </summary>
+        /// <param name="entities">Danh sách bản ghi cập nhật</param>
+        /// <returns>Kết quả thực hiện</returns>
+        Task<bool> Update(IEnumerable<TEntity> entities);
+        #endregion
+
+        #region Delete
+        /// <summary>
+        /// Xóa bản ghi
+        /// </summary>
+        /// <param name="entity">Bản ghi cần xóa (cần chứa khóa chính)</param>
+        /// <param name="dbTransaction">transaction</param>
+        /// <returns>Kết quả thực hiện</returns>
+        Task<bool> Delete(TEntity entity, IDbTransaction dbTransaction);
+
+        /// <summary>
+        /// Xóa nhiều bản ghi
+        /// </summary>
+        /// <param name="entities">danh sách bản ghi</param>
+        /// <param name="dbTransaction">transaction</param>
+        /// <returns>Kết quả thực hiện</returns>
+        Task<bool> Delete(IEnumerable<TEntity> entities, IDbTransaction dbTransaction);
+
+        /// <summary>
+        /// Xóa bản ghi
+        /// </summary>
+        /// <param name="entity">Bản ghi cần xóa (cần chứa khóa chính)</param>
+        /// <returns>Kết quả thực hiện</returns>
+        Task<bool> Delete(TEntity entity);
+
+        /// <summary>
+        /// Xóa nhiều bản ghi
+        /// </summary>
+        /// <param name="entities">danh sách bản ghi</param>
+        /// <returns>Kết quả thực hiện</returns>
+        Task<bool> Delete(IEnumerable<TEntity> entities);
+        #endregion
+
+        #region Check duplicate
+        /// <summary>
+        /// Hàm kiểm tra trùng lặp dữ liệu
+        /// </summary>
+        /// <param name="propName">Tên thuộc tính (tương ứng với tên trường trong CSDL)</param>
+        /// <param name="value">Giá trị muốn kiểm tra</param>
+        /// <returns>true - giá trị bị trùng, false - giá trị không bị trùng</returns>
+        Task<bool> CheckDuplicate(string propName, object value);
+
+        /// <summary>
+        /// Hàm kiểm tra trùng lặp dữ liệu trước khi update bản ghi
+        /// </summary>
+        /// <param name="propName">Tên trường dữ liệu</param>
+        /// <param name="value">Giá trị cần kiểm tra</param>
+        /// <param name="entityId">Đối tượng thực thể</param>
+        /// <returns>true - giá trị bị trùng, false - giá trị không bị trùng</returns>
+        Task<bool> CheckDuplicateBeforeUpdate(string propName, object value, TEntity entity);
+        #endregion
+
+        #region Select
+        /// <summary>
+        /// Select 1 bản ghi
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="paramDict"></param>
+        /// <returns></returns>
+        Task<T> SelectObject<T>(Dictionary<string, object> paramDict);
+
+        /// <summary>
+        /// Select 1 bản ghi
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        Task<T> SelectObject<T>(object param);
+
+        /// <summary>
+        /// Select nhiều bản ghi thuộc 1 bảng
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="paramDict"></param>
+        /// <returns></returns>
+        Task<IEnumerable<T>> SelectObjects<T>(Dictionary<string, object> paramDict);
+
+        /// <summary>
+        /// Select nhiều bản ghi thuộc 1 bảng
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        Task<IEnumerable<T>> SelectObjects<T>(object param);
+
+        /// <summary>
+        /// Select bản ghi thuộc nhiều bảng
+        /// </summary>
+        /// <param name="tableNames"></param>
+        /// <param name="paramDict"></param>
+        /// <returns></returns>
+        Task<object> SelectManyObjects(string[] tableNames, Dictionary<string, Dictionary<string, object>> paramDict);
+        #endregion
+
     }
 }
