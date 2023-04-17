@@ -1,5 +1,8 @@
 ﻿using HUST.Core.Constants;
 using HUST.Core.Extensions;
+using HUST.Core.Interfaces.Repository;
+using HUST.Core.Interfaces.Service;
+using HUST.Core.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -28,41 +31,31 @@ namespace HUST.Core.Utils
                     options.SerializerSettings.ReferenceLoopHandling = SerializeUtil.JSONReferenceLoopHandling;
                     options.SerializerSettings.ContractResolver = null;
                 });
-
-            // Đăng nhập bằng jwt
-            services.AddJwtAuthorization(configuration);
-            //services.AddAuthorization();
-
             // Cache redis
             var redisCache = configuration.GetConnectionString(ConnectionStringSettingKey.RedisCache);
             if (!string.IsNullOrEmpty(redisCache))
             {
-                //services.Configure<HustRedisCacheOptions>(config =>
-                //{
-                //    config.Configuration = redisCache;
-                //    config.InstanceName = CacheKey.HustRedisCacheKey;
-                //});
                 services.AddStackExchangeRedisCache(option =>
                 {
                     option.Configuration = redisCache;
-                    option.InstanceName = CacheKey.HustRedisCacheKey;
+                    option.InstanceName = CacheKey.HustInstanceCache;
                 });
             }
             else
             {
                 services.AddDistributedMemoryCache();
             }
+            services.AddTransient<IDistributedCacheUtil, DistributedCacheUtil>();
+            services.AddSingleton<ISessionService, SessionService>();
 
-            
+            // Đăng nhập bằng jwt
+            services.AddJwtAuthorization(configuration);
 
             // Inject service mapper, auth, cache
             services.UseAutoMapper();
             services.AddHttpContextAccessor();
             services.AddSingleton<IConfigUtil, ConfigUtil>();
             services.AddTransient<IAuthUtil, AuthUtil>();
-            //services.AddTransient<IHustDistributedCache, HustRedisCache>();
-            //services.AddTransient<DistributedCacheHelper>();
-            services.AddTransient<IDistributedCacheUtil, DistributedCacheUtil>();
             services.AddTransient<ILogUtil, LogUtil>();
             services.AddTransient<IHustServiceCollection, HustServiceCollection>();
         }

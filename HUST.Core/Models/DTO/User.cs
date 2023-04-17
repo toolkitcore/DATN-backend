@@ -4,29 +4,67 @@ using System;
 namespace HUST.Core.Models.DTO
 {
     /// <summary>
-    /// Bảng user_setting: Bảng thông tin cấu hình của người dùng
+    /// Bảng user: Bảng thông tin user
     /// </summary>
-    public class UserSetting : BaseDTO
+    public class User : BaseDTO
     {
         /// <summary>
         /// Id khóa chính
         /// </summary>
         [Key]
-        public Guid UserSettingId { get; set; }
+        public Guid UserId { get; set; }
 
         /// <summary>
-        /// Id người dùng
+        /// Tên đăng nhập
         /// </summary>
-        public Guid? UserId { get; set; }
+        public string UserName { get; set; }
 
         /// <summary>
-        /// Key
+        /// Mật khẩu
         /// </summary>
-        public string SettingKey { get; set; }
+        public string Password { get; set; }
 
         /// <summary>
-        /// Value
+        /// Email
         /// </summary>
-        public string SettingValue { get; set; }
+        public string Email { get; set; }
+
+        /// <summary>
+        /// Tên đầy đủ
+        /// </summary>
+        public string FullName { get; set; }
+
+        /// <summary>
+        /// Tên hiển thị
+        /// </summary>
+        public string DisplayName { get; set; }
+
+        /// <summary>
+        /// Vị trí, công việc
+        /// </summary>
+        public string Position { get; set; }
+
+        /// <summary>
+        /// Ngày sinh
+        /// </summary>
+        public DateTime? Birthday { get; set; }
+
+        /// <summary>
+        /// Link avatar
+        /// </summary>
+        public string Avatar { get; set; }
+
+        /// <summary>
+        /// Trạng thái
+        /// </summary>
+        public int? Status { get; set; }
+
+        #region Custom
+        /// <summary>
+        /// Id dictionary đang thao tác
+        /// </summary>
+        public Guid? DictionaryId { get; set; }
+
+        #endregion
     }
 }

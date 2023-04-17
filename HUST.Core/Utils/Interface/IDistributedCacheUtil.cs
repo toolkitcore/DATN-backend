@@ -52,16 +52,6 @@ namespace HUST.Core.Utils
         Task SetAsync(string key, object value, bool isAbsoluteExpiraton = false);
 
         /// <summary>
-        /// Thêm object vào cache
-        /// </summary>
-        /// <param name="key">Cache key</param>
-        /// <param name="value">Giá trị cần cache</param>
-        /// <param name="timeout">Thời gian hết hạn</param>
-        /// <param name="isAbsoluteExpiraton"></param>
-        /// <returns></returns>
-        void Set(string key, object value, TimeSpan timeout, bool isAbsoluteExpiraton = false);
-
-        /// <summary>
         /// Xóa giá trị trong cache
         /// </summary>
         /// <param name="key"></param>
@@ -83,10 +73,26 @@ namespace HUST.Core.Utils
         Task<T> GetAsync<T>(string key);
 
         /// <summary>
+        /// Thêm object vào cache
+        /// </summary>
+        /// <param name="key">Cache key</param>
+        /// <param name="value">Giá trị cần cache</param>
+        /// <param name="timeout">Thời gian hết hạn</param>
+        /// <param name="isAbsoluteExpiraton"></param>
+        /// <returns></returns>
+        void Set(string key, object value, TimeSpan timeout, bool isAbsoluteExpiraton = false);
+
+        /// <summary>
         /// Lấy object trong cache
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
         T Get<T>(string key);
+
+        /// <summary>
+        /// Xóa giá trị trong cache
+        /// </summary>
+        /// <param name="key"></param>
+        void Delete(string key);
     }
 }

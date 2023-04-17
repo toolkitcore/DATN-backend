@@ -4,59 +4,29 @@ using System;
 namespace HUST.Core.Models.DTO
 {
     /// <summary>
-    /// Bảng user: Bảng thông tin user
+    /// Bảng user_setting: Bảng thông tin cấu hình của người dùng
     /// </summary>
-    public class User : BaseDTO
+    public class UserSetting : BaseDTO
     {
         /// <summary>
         /// Id khóa chính
         /// </summary>
         [Key]
-        public Guid UserId { get; set; }
+        public Guid UserSettingId { get; set; }
 
         /// <summary>
-        /// Tên đăng nhập
+        /// Id người dùng
         /// </summary>
-        public string UserName { get; set; }
+        public Guid? UserId { get; set; }
 
         /// <summary>
-        /// Mật khẩu
+        /// Key
         /// </summary>
-        public string Password { get; set; }
+        public string SettingKey { get; set; }
 
         /// <summary>
-        /// Email
+        /// Value
         /// </summary>
-        public string Email { get; set; }
-
-        /// <summary>
-        /// Tên đầy đủ
-        /// </summary>
-        public string FullName { get; set; }
-
-        /// <summary>
-        /// Tên hiển thị
-        /// </summary>
-        public string DisplayName { get; set; }
-
-        /// <summary>
-        /// Vị trí, công việc
-        /// </summary>
-        public string Position { get; set; }
-
-        /// <summary>
-        /// Ngày sinh
-        /// </summary>
-        public DateTime? Birthday { get; set; }
-
-        /// <summary>
-        /// Link avatar
-        /// </summary>
-        public string Avatar { get; set; }
-
-        /// <summary>
-        /// Trạng thái
-        /// </summary>
-        public int? Status { get; set; }
+        public string SettingValue { get; set; }
     }
 }

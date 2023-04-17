@@ -1,29 +1,17 @@
-﻿using AutoMapper;
-using Dapper;
-using HUST.Core.Interfaces.Repository;
-using HUST.Core.Models.DTO;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Data;
-using System.Threading.Tasks;
+﻿using HUST.Core.Interfaces.Repository;
+using HUST.Core.Models.Entity;
+using HUST.Core.Utils;
 
 namespace HUST.Infrastructure.Repositories
 {
-    public class UserRepository : BaseRepository<User>, IUserRepository
+    public class UserRepository : BaseRepository<user>, IUserRepository
     {
         #region Constructors
-        public UserRepository(IConfiguration configuration, IMapper mapper) : base(configuration, mapper)
+        public UserRepository(IHustServiceCollection serviceCollection) : base(serviceCollection)
         {
 
         }
         #endregion
 
-        public async Task<Guid> GetUserId(User user)
-        {
-            return await Connection.QueryFirstOrDefaultAsync<Guid>(
-                sql: "Proc_GetUserId",
-                param: user,
-                commandType: CommandType.StoredProcedure);
-        }
     }
 }

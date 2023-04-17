@@ -9,6 +9,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 using Dapper.Contrib.Extensions;
+using HUST.Core.Utils;
+using System.Text;
+using HUST.Core.Models.Entity;
+using System.ComponentModel;
+using System.Linq;
 
 namespace HUST.Infrastructure.Repositories
 {
@@ -23,7 +28,12 @@ namespace HUST.Infrastructure.Repositories
         /// <summary>
         /// Thông tin về kết nối
         /// </summary>
-        private readonly string _connectionString;
+        public readonly string ConnectionString;
+
+        /// <summary>
+        /// Thông tin thời gian timeout
+        /// </summary>
+        public readonly int ConnectionTimeout = GlobalConfig.ConnectionTimeout;
 
         /// <summary>
         /// Tên lớp entity
@@ -31,139 +41,225 @@ namespace HUST.Infrastructure.Repositories
         protected readonly string TableName;
 
         /// <summary>
-        /// Kết nối tới cơ sở dữ liệu
+        /// Đối tượng ServiceCollection
         /// </summary>
-        protected IDbConnection Connection = null;
-
-        protected IMapper Mapper;
+        protected IHustServiceCollection ServiceCollection;
 
         #endregion
 
         #region Constructor
-        public BaseRepository(IConfiguration configuration, IMapper mapper)
+        public BaseRepository(IHustServiceCollection serviceCollection)
         {
-            // lấy ra thông tin kết nối:
-            _connectionString = configuration.GetConnectionString(ConnectionStringSettingKey.Database);
+            ServiceCollection = serviceCollection;
 
-            // Khởi tạo kết nối:
-            Connection = new MySqlConnection(_connectionString);
+            // lấy ra thông tin kết nối:
+            ConnectionString = serviceCollection.ConfigUtil.GetConnectionString(ConnectionStringSettingKey.Database);
 
             // Lấy ra tên lớp entity (tên bảng)
             TableName = typeof(TEntity).Name;
-
-            Mapper = mapper;
         }
         #endregion
 
         #region Methods
 
-        /// <summary>
-        /// Lấy thông tin đối tượng theo khóa chính (id)
-        /// </summary>
-        /// <param name="entityId">Khóa chính (id)</param>
-        /// <returns>Đối tượng</returns>
-        public async Task<TEntity> Get(Guid entityId, IDbTransaction dbTransaction = null)
+        #region Tạo kết nối
+        public IDbConnection CreateConnection()
         {
-            var connection = this.Connection;
-            if (dbTransaction != null)
+            var conn = new MySqlConnection(ConnectionString);
+            if (conn.State == ConnectionState.Closed)
             {
-                connection = dbTransaction.Connection;
+                conn.Open();
             }
-            return await connection.GetAsync<TEntity>(entityId, dbTransaction);
+            return conn;
         }
 
-        /// <summary>
-        /// Thêm đối tượng
-        /// </summary>
-        /// <param name="entity">Đối tượng cần thêm</param>
-        /// <returns>Số bản ghi được thêm</returns>
-        public async Task<bool> Insert(TEntity entity, IDbTransaction dbTransaction = null)
+        public async Task<IDbConnection> CreateConnectionAsync()
         {
-            var connection = this.Connection;
-            if (dbTransaction != null)
+            var conn = new MySqlConnection(ConnectionString);
+            if (conn.State == ConnectionState.Closed)
             {
-                connection = dbTransaction.Connection;
+                await conn.OpenAsync().ConfigureAwait(false);
             }
-            var result = await connection.InsertAsync(entity, dbTransaction);
+            return conn;
+        }
+        #endregion
+
+        #region Get
+        public async Task<TEntity> Get(Guid entityId, IDbTransaction dbTransaction)
+        {
+            var connection = dbTransaction.Connection;
+            return await connection.GetAsync<TEntity>(entityId, dbTransaction, ConnectionTimeout);
+        }
+
+        public async Task<TEntity> Get(Guid entityId)
+        {
+            using(var connection = new MySqlConnection(ConnectionString))
+            {
+                return await connection.GetAsync<TEntity>(entityId, commandTimeout: ConnectionTimeout);
+            }
+        }
+        #endregion
+
+        #region Insert
+        public async Task<bool> Insert(TEntity entity, IDbTransaction dbTransaction)
+        {
+            var connection = dbTransaction.Connection;
+            var result = await connection.InsertAsync(entity, dbTransaction, ConnectionTimeout);
+            return result > 0;
+        }
+        public async Task<bool> Insert(IEnumerable<TEntity> entities, IDbTransaction dbTransaction)
+        {
+            var connection = dbTransaction.Connection;
+            var result = await connection.InsertAsync(entities, dbTransaction, ConnectionTimeout);
             return result > 0;
         }
 
-        /// <summary>
-        /// Thêm đối tượng
-        /// </summary>
-        /// <param name="entity">Đối tượng cần thêm</param>
-        /// <returns>Số bản ghi được thêm</returns>
-        public async Task<bool> Insert(IEnumerable<TEntity> entities, IDbTransaction dbTransaction = null)
+        public async Task<bool> Insert(TEntity entity)
         {
-            var connection = this.Connection;
-            if (dbTransaction != null)
+            using (var connection = new MySqlConnection(ConnectionString))
             {
-                connection = dbTransaction.Connection;
+                var result = await connection.InsertAsync(entity, commandTimeout: ConnectionTimeout);
+                return result > 0;
             }
-            var result = await connection.InsertAsync(entities, dbTransaction);
-            return result > 0;
+        }
+
+        public async Task<bool> Insert(IEnumerable<TEntity> entities)
+        {
+            using(var connection = new MySqlConnection(ConnectionString))
+            {
+                var result = await connection.InsertAsync(entities, commandTimeout: ConnectionTimeout);
+                return result > 0;
+            }
+        }
+        #endregion
+
+        #region Update
+        public async Task<bool> Update(TEntity entity, IDbTransaction dbTransaction)
+        {
+            var connection = dbTransaction.Connection;
+            return await connection.UpdateAsync(entity, dbTransaction, ConnectionTimeout);
+        }
+
+        public async Task<bool> Update(IEnumerable<TEntity> entities, IDbTransaction dbTransaction)
+        {
+            var connection = dbTransaction.Connection;
+            return await connection.UpdateAsync(entities, dbTransaction, ConnectionTimeout);
+        }
+
+        public async Task<bool> Update(TEntity entity)
+        {
+            using (var connection = new MySqlConnection(ConnectionString))
+            {
+                return await connection.UpdateAsync(entity, commandTimeout: ConnectionTimeout);
+            }
+        }
+
+        public async Task<bool> Update(IEnumerable<TEntity> entities)
+        {
+            using (var connection = new MySqlConnection(ConnectionString))
+            {
+                return await connection.UpdateAsync(entities, commandTimeout: ConnectionTimeout);
+            }
         }
 
         /// <summary>
-        /// Chỉnh sửa thông tin đối tượng
+        /// Updates table T with the values in param.
+        /// The table must have a key named "Id" and the value of id must be included in the "param" anon object. The Id value is used as the "where" clause in the generated SQL
         /// </summary>
-        /// <param name="entity">Đối tượng cần cập nhật thông tin</param>
-        /// <returns>Số bản ghi bị ảnh hưởng</returns>
-        public async Task<bool> Update(TEntity entity, IDbTransaction dbTransaction = null)
+        /// <param name="type">Type to update. Translates to table name</param>
+        /// <param name="param">An anonymous object with key=value types</param>
+        /// <param name="transaction">transaction</param>
+        /// <returns>true/false</returns>
+        public async Task<bool> Update(Type type, object param, IDbTransaction transaction = null)
         {
-            var connection = this.Connection;
-            if (dbTransaction != null)
+            var props = new List<string>();
+            object id = null;
+            var keyAttribute = FunctionUtil.GetEntityKeyProperty(type);
+
+            if(keyAttribute == null)
             {
-                connection = dbTransaction.Connection;
+                return false;
             }
-            return await connection.UpdateAsync(entity, dbTransaction);
+
+            foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(param))
+            {
+                if (!keyAttribute.Name.Equals(property.Name, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    props.Add(property.Name);
+                } 
+                else
+                {
+                    id = property.GetValue(param);
+                }
+            }
+
+            if (id != null && props.Count > 0)
+            {
+                var sql = string.Format(
+                    "UPDATE {0} SET {1} WHERE {2}=@Id", 
+                    type.Name,
+                    string.Join(",", props.Select(prop => $"{prop}=@{prop}")), 
+                    keyAttribute.Name);
+
+                if(transaction != null)
+                {
+                    var result = await transaction.Connection.ExecuteAsync(sql, param, transaction, ConnectionTimeout) > 0;
+                    return result;
+                } else
+                {
+                    using (var conn = await this.CreateConnectionAsync())
+                    {
+                        var result = await conn.ExecuteAsync(sql, param, transaction, ConnectionTimeout) > 0;
+                        return result;
+                    }
+                }
+                
+            }
+            return false;
         }
 
-        /// <summary>
-        /// Chỉnh sửa thông tin đối tượng
-        /// </summary>
-        /// <param name="entity">Đối tượng cần cập nhật thông tin</param>
-        /// <returns>Số bản ghi bị ảnh hưởng</returns>
-        public async Task<bool> Update(IEnumerable<TEntity> entities, IDbTransaction dbTransaction = null)
+        public async Task<bool> Update<T>(object param, IDbTransaction transaction = null)
         {
-            var connection = this.Connection;
-            if (dbTransaction != null)
-            {
-                connection = dbTransaction.Connection;
-            }
-            return await connection.UpdateAsync(entities, dbTransaction);
+            return await Update(typeof(T), param, transaction);
         }
 
-        /// <summary>
-        /// Xóa đối tượng dựa theo khóa chính
-        /// </summary>
-        /// <param name="entityId">Khóa chính</param>
-        /// <returns>Số bản ghi bị ảnh hưởng</returns>
-        public async Task<bool> Delete(TEntity entity, IDbTransaction dbTransaction = null)
+        public async Task<bool> Update(object param, IDbTransaction transaction = null)
         {
-            var connection = this.Connection;
-            if (dbTransaction != null)
-            {
-                connection = dbTransaction.Connection;
-            }
-            return await connection.DeleteAsync(entity, dbTransaction);
+            return await Update(typeof(TEntity), param, transaction);
+        }
+        #endregion
+
+        #region Delete
+        public async Task<bool> Delete(TEntity entity, IDbTransaction dbTransaction)
+        {
+            var connection = dbTransaction.Connection;
+            return await connection.DeleteAsync(entity, dbTransaction, ConnectionTimeout);
         }
 
-        /// <summary>
-        /// Xóa đối tượng dựa theo khóa chính
-        /// </summary>
-        /// <param name="entityId">Khóa chính</param>
-        /// <returns>Số bản ghi bị ảnh hưởng</returns>
-        public async Task<bool> Delete(IEnumerable<TEntity> entities, IDbTransaction dbTransaction = null)
+        public async Task<bool> Delete(IEnumerable<TEntity> entities, IDbTransaction dbTransaction)
         {
-            var connection = this.Connection;
-            if (dbTransaction != null)
-            {
-                connection = dbTransaction.Connection;
-            }
-            return await connection.DeleteAsync(entities, dbTransaction);
+            var connection = dbTransaction.Connection;
+            return await connection.DeleteAsync(entities, dbTransaction, ConnectionTimeout);
         }
 
+        public async Task<bool> Delete(TEntity entity)
+        {
+            using (var connection = new MySqlConnection(ConnectionString))
+            {
+                return await connection.DeleteAsync(entity, commandTimeout: ConnectionTimeout);
+            }
+        }
+
+        public async Task<bool> Delete(IEnumerable<TEntity> entities)
+        {
+            using (var connection = new MySqlConnection(ConnectionString))
+            {
+                return await connection.DeleteAsync(entities, commandTimeout: ConnectionTimeout);
+            }
+        }
+        #endregion
+
+        #region Check duplicate
         /// <summary>
         /// Hàm kiểm tra trùng lặp dữ liệu
         /// </summary>
@@ -179,19 +275,22 @@ namespace HUST.Infrastructure.Repositories
             var parameters = new DynamicParameters();
             parameters.Add($"@{propName}", value);
 
-            // Thực hiện truy vấn
-            var result = await Connection.QueryFirstOrDefaultAsync<object>(
-                sql: sqlCommand, 
-                param: parameters, 
-                commandType: CommandType.Text);
-
-            // Nếu có dữ liệu trả về (khác null) => giá trị prop bị trùng
-            if(result != null)
+            using (var conn = await this.CreateConnectionAsync())
             {
-                return true;
-            }
+                // Thực hiện truy vấn
+                var result = await conn.QueryFirstOrDefaultAsync<object>(
+                    sql: sqlCommand,
+                    param: parameters,
+                    commandType: CommandType.Text);
 
-            return false;
+                // Nếu có dữ liệu trả về (khác null) => giá trị prop bị trùng
+                if (result != null)
+                {
+                    return true;
+                }
+
+                return false;
+            }
         }
 
         /// <summary>
@@ -214,21 +313,200 @@ namespace HUST.Infrastructure.Repositories
             parameters.Add($"@{TableName}Id", entityId);
             parameters.Add($"@{propName}", value);
 
-            // Thực hiện truy vấn
-            var result = await Connection.QueryFirstOrDefaultAsync<object>(
-                sql: sqlCommand,
-                param: parameters,
-                commandType: CommandType.Text);
-
-
-            // Nếu có dữ liệu trả về (khác null) => giá trị prop bị trùng
-            if (result != null)
+            using (var conn = await this.CreateConnectionAsync())
             {
-                return true;
+                // Thực hiện truy vấn
+                var result = await conn.QueryFirstOrDefaultAsync<object>(
+                    sql: sqlCommand,
+                    param: parameters,
+                    commandType: CommandType.Text);
+
+
+                // Nếu có dữ liệu trả về (khác null) => giá trị prop bị trùng
+                if (result != null)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+        #endregion
+
+        #region Select
+        public async Task<T> SelectObject<T>(Dictionary<string, object> paramDict)
+        {
+            var entityTable = FunctionUtil.GetEntityType<T>();
+            var whereList = new List<string>();
+            var parameters = new DynamicParameters();
+            foreach (var item in paramDict)
+            {
+                whereList.Add($"{item.Key} = @{item.Key}");
+                parameters.Add($"@{item.Key}", item.Value);
             }
 
-            return false;
+            // Khai báo câu lệnh sql
+            var sqlCommand = $"SELECT * FROM {entityTable.Name} WHERE {string.Join(" AND ", whereList.ToArray())}";
+
+            using (var conn = await this.CreateConnectionAsync())
+            {
+                // Thực hiện truy vấn
+                var result = await conn.QueryFirstOrDefaultAsync<object>(
+                    sql: sqlCommand,
+                    param: parameters,
+                    commandType: CommandType.Text);
+
+                if (result != null)
+                {
+                    var data = SerializeUtil.DeserializeObject(SerializeUtil.SerializeObject(result), entityTable);
+                    return ServiceCollection.Mapper.Map<T>(data);
+                }
+
+                return default(T);
+            }
+
         }
+        public async Task<T> SelectObject<T>(object param)
+        {
+            var entityTable = FunctionUtil.GetEntityType<T>();
+            var whereList = new List<string>();
+            var parameters = new DynamicParameters();
+
+            foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(param))
+            {
+                whereList.Add($"{property.Name} = @{property.Name}");
+            }
+            parameters.AddDynamicParams(param);
+
+            // Khai báo câu lệnh sql
+            var sqlCommand = $"SELECT * FROM {entityTable.Name} WHERE {string.Join(" AND ", whereList)}";
+
+            using (var conn = await this.CreateConnectionAsync())
+            {
+                // Thực hiện truy vấn
+                var result = await conn.QueryFirstOrDefaultAsync<object>(
+                    sql: sqlCommand,
+                    param: parameters,
+                    commandType: CommandType.Text);
+
+
+                if (result != null)
+                {
+                    var data = SerializeUtil.DeserializeObject(SerializeUtil.SerializeObject(result), entityTable);
+                    return ServiceCollection.Mapper.Map<T>(data);
+                }
+
+                return default;
+            }
+        }
+        public async Task<IEnumerable<T>> SelectObjects<T>(Dictionary<string, object> paramDict)
+        {
+            var entityTable = FunctionUtil.GetEntityType<T>();
+            var whereList = new List<string>();
+            var parameters = new DynamicParameters();
+            foreach (var item in paramDict)
+            {
+                whereList.Add($"{item.Key} = @{item.Key}");
+                parameters.Add($"@{item.Key}", item.Value);
+            }
+
+            // Khai báo câu lệnh sql
+            var sqlCommand = $"SELECT * FROM {entityTable.Name} WHERE {string.Join(" AND ", whereList)}";
+
+            using (var conn = await this.CreateConnectionAsync())
+            {
+                // Thực hiện truy vấn
+                var result = await conn.QueryAsync<object>(
+                    sql: sqlCommand,
+                    param: parameters,
+                    commandType: CommandType.Text);
+
+
+                if (result != null)
+                {
+                    var data = SerializeUtil.DeserializeObject(SerializeUtil.SerializeObject(result),
+                        typeof(IEnumerable<>).MakeGenericType(entityTable));
+                    return ServiceCollection.Mapper.Map<IEnumerable<T>>(data);
+                }
+
+                return default;
+            }
+        }
+        public async Task<IEnumerable<T>> SelectObjects<T>(object param)
+        {
+            var entityTable = FunctionUtil.GetEntityType<T>();
+            var whereList = new List<string>();
+            var parameters = new DynamicParameters();
+
+            foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(param))
+            {
+                whereList.Add($"{property.Name} = @{property.Name}");
+            }
+            parameters.AddDynamicParams(param);
+
+            // Khai báo câu lệnh sql
+            var sqlCommand = $"SELECT * FROM {entityTable.Name} WHERE {string.Join(" AND ", whereList)}";
+
+            using (var conn = await this.CreateConnectionAsync())
+            {
+                // Thực hiện truy vấn
+                var result = await conn.QueryAsync<object>(
+                    sql: sqlCommand,
+                    param: parameters,
+                    commandType: CommandType.Text);
+
+
+                if (result != null)
+                {
+                    var data = SerializeUtil.DeserializeObject(SerializeUtil.SerializeObject(result),
+                        typeof(IEnumerable<>).MakeGenericType(entityTable));
+                    return ServiceCollection.Mapper.Map<IEnumerable<T>>(data);
+                }
+
+                return default;
+            }
+        }
+        public async Task<object> SelectManyObjects(string[] tableNames, Dictionary<string, Dictionary<string, object>> paramDict)
+        {
+            var parameters = new DynamicParameters();
+            var sqlCommand = new StringBuilder();
+            foreach (var table in tableNames)
+            {
+                var tableParam = paramDict[table];
+                var whereList = new List<string>();
+                foreach (var (key, value) in tableParam)
+                {
+                    parameters.Add($"@{table}.{key}", value);
+                    whereList.Add($"{key} = @{table}.{key}");
+                }
+                sqlCommand.Append($"SELECT * FROM {table} WHERE {string.Join(" AND ", whereList)};");
+            }
+
+            using (var conn = await this.CreateConnectionAsync())
+            {
+                // Thực hiện truy vấn
+                var queryResult = await conn.QueryMultipleAsync(
+                    sql: sqlCommand.ToString(),
+                    param: parameters,
+                    commandType: CommandType.Text);
+
+                if (queryResult != null)
+                {
+                    var res = new Dictionary<string, object>();
+                    foreach (var table in tableNames)
+                    {
+                        res.Add(table, await queryResult.ReadAsync());
+                    }
+
+                    return res;
+                }
+
+                return null;
+            }
+
+        }
+        #endregion
+
         #endregion
     }
 }

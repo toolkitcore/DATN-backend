@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using HUST.Core.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -12,6 +13,11 @@ namespace HUST.Api.Controllers
     [ApiController, Authorize]
     public class BaseApiController : ControllerBase
     {
+        protected IHustServiceCollection ServiceCollection;
 
+        public BaseApiController(IHustServiceCollection serviceCollection)
+        {
+            ServiceCollection = serviceCollection;
+        }
     }
 }

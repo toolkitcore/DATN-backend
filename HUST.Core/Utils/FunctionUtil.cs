@@ -1,4 +1,7 @@
-﻿using System;
+﻿using HUST.Core.Models;
+using HUST.Core.Models.Entity;
+using HUST.Core.Models.DTO;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -7,6 +10,7 @@ using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
+using HUST.Core.Constants;
 
 namespace HUST.Core.Utils
 {
@@ -88,6 +92,80 @@ namespace HUST.Core.Utils
 
             var str = Encoding.UTF8.GetString(bytes);
             return SerializeUtil.DeserializeObject<T>(str);
+        }
+
+        public static string ToPascalCase(this string str)
+        {
+            return str
+                .Split(new[] { "_" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => char.ToUpperInvariant(s[0]) + s.Substring(1, s.Length - 1))
+                .Aggregate(string.Empty, (s1, s2) => s1 + s2);
+
+        }
+
+        public static string ToSnakeCase(this string str)
+        {
+            return string.Concat(str.Select((x, i) => i > 0 && char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToLower();
+        }
+
+        public static Type GetEntityType<T>()
+        {
+            //if (typeof(T).IsAssignableFrom(typeof(BaseDTO)))
+            //{
+            //    var dtoName = typeof(T).Name;
+            //    var entityName = dtoName.ToSnakeCase();
+            //    return Type.GetType(entityName);
+            //}
+            //return typeof(T);
+
+            var dtoName = typeof(T).Name;
+            var entityName = dtoName.ToSnakeCase();
+            return Type.GetType($"HUST.Core.Models.Entity.{entityName},HUST.Core");
+        }
+
+        public static Type GetDTOType<T>()
+        {
+            if (typeof(T).IsAssignableFrom(typeof(BaseEntity)))
+            {
+                var entityName = typeof(T).Name;
+                var dtoName = entityName.ToPascalCase();
+                return Type.GetType(dtoName);
+            }
+            return typeof(T);
+        }
+
+        /// <summary>
+        /// Lấy ra Type của model
+        /// </summary>
+        /// <param name="typeName"></param>
+        /// <returns></returns>
+        public static Type GetModelType(string typeName)
+        {
+            var ns = string.Format(
+                GlobalConfig.ModelNamespace.FirstOrDefault(x => Type.GetType(string.Format(x, typeName)) != null) ?? "{0}", typeName);
+            return Type.GetType(ns);
+        }
+
+        /// <summary>
+        /// Lấy trường key của DTO
+        /// </summary>
+        /// <param name="typeName"></param>
+        /// <returns></returns>
+        public static PropertyInfo GetDtoKeyProperty(Type dtoType)
+        {
+            var prop = dtoType.GetProperties().FirstOrDefault(x => Attribute.IsDefined(x, typeof(Dapper.Contrib.Extensions.KeyAttribute)));
+            return prop;
+        }
+
+        /// <summary>
+        /// Lấy trường key của entity
+        /// </summary>
+        /// <param name="typeName"></param>
+        /// <returns></returns>
+        public static PropertyInfo GetEntityKeyProperty(Type dtoType)
+        {
+            var prop = dtoType.GetProperties().FirstOrDefault(x => Attribute.IsDefined(x, typeof(System.ComponentModel.DataAnnotations.KeyAttribute)));
+            return prop;
         }
     }
 }

@@ -13,7 +13,7 @@ using BC = BCrypt.Net.BCrypt;
 
 namespace HUST.Core.Utils
 {
-    public class SecurityUtil
+    public static class SecurityUtil
     {
         /// <summary>
         /// Hàm băm mật khẩu
@@ -47,19 +47,22 @@ namespace HUST.Core.Utils
             var secretKey = appSettings[AppSettingKey.JwtSecretKey];
             var issuer = appSettings[AppSettingKey.JwtIssuer];
             var audience = appSettings[AppSettingKey.JwtAudience];
+            var lifeTime = SecurityUtil.GetAuthTokenLifeTime(configuration);
 
             var key = Encoding.ASCII.GetBytes(secretKey);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                        new Claim("UserId", Guid.NewGuid().ToString()),
-                        new Claim("UserName", user.UserName),
+                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                         new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
-                        new Claim(JwtRegisteredClaimNames.Email, user.UserName),
-                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                        new Claim(JwtClaimKey.UserId, user.UserId.ToString()),
+                        new Claim(JwtClaimKey.UserName, user.UserName ?? ""),
+                        new Claim(JwtClaimKey.Email, user.Email ?? ""),
+                        new Claim(JwtClaimKey.Status, ((int)user.Status).ToString()),
+                        new Claim(JwtClaimKey.DictionaryId, user.DictionaryId?.ToString() ?? ""),
                      }),
-                Expires = DateTime.UtcNow.AddMinutes(1),
+                Expires = DateTime.UtcNow.AddMinutes(lifeTime),
                 Issuer = issuer,
                 Audience = audience,
                 SigningCredentials = new SigningCredentials
@@ -70,6 +73,23 @@ namespace HUST.Core.Utils
             var token = new JwtSecurityTokenHandler().CreateToken(tokenDescriptor);
             var jwtToken = tokenHandler.WriteToken(token);
             return jwtToken;
+        }
+
+        /// <summary>
+        /// Lấy thời gian timeout của jwt (đơn vị phút)
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <returns></returns>
+        public static int GetAuthTokenLifeTime(IConfiguration configuration)
+        {
+            var appSettings = configuration.GetSection(AppSettingKey.AppSettingsSection);
+            int.TryParse(appSettings[AppSettingKey.JwtLifeTime], out int lifeTime);
+            if (lifeTime == 0)
+            {
+                lifeTime = 60; // 1h
+            }
+
+            return lifeTime;
         }
     }
 }

@@ -12,11 +12,9 @@ namespace HUST.Api.Controllers
 {
     public class UserController : BaseApiController
     {
-        public readonly IHustServiceCollection ServiceCollection;
 
-        public UserController(IHustServiceCollection serviceCollection)
+        public UserController(IHustServiceCollection serviceCollection) : base (serviceCollection)
         {
-            ServiceCollection = serviceCollection;
         }
 
 
