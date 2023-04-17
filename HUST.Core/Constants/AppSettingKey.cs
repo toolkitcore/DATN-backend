@@ -14,22 +14,27 @@ namespace HUST.Core.Constants
         public const string AppSettingsSection = "AppSettings";
         public const string ConnectionStringsSection = "ConnectionStrings";
         public const string APIUrlSection = "APIUrl";
+
         public const string JwtSecretKey = "JwtSecretKey";
         public const string JwtIssuer = "JwtIssuer";
         public const string JwtAudience = "JwtAudience";
-        
-        public class ConnectionStrings
-        {
-            public const string RedisCache = "ConnectionStrings:RedisCache";
-            public const string Database = "ConnectionStrings:Database";
-        }
-
+        public const string JwtLifeTime = "JwtLifeTime";
     }
 
     public static class ConnectionStringSettingKey
     {
         public const string RedisCache = "RedisCache";
         public const string Database = "Database";
+    }
+
+    /// <summary>
+    /// Hằng key cache
+    /// </summary>
+    public static class CacheKey
+    {
+        public const string HustInstanceCache = "Hust";
+
+        public const string SessionCacheKey = "session_{0}";
     }
 
 }

@@ -16,6 +16,11 @@ namespace HUST.Core.Constants
             public const int WrongLoginInfo = 1001;
             public const int UnactivatedEmail = 1002;
         }
+
+        public const int Err1000 = 1000;
+        public const int Err1004 = 1004;
+
+
         /// <summary>
         /// Mã lỗi khi xảy ra exception
         /// </summary>
@@ -55,5 +60,11 @@ namespace HUST.Core.Constants
         /// Mã lỗi khi validate nghiệp vụ riêng thất bại
         /// </summary>
         public const string ErrorCodeValidateCustom = "ERR_008";
+    }
+
+    public class ErrorMessage
+    {
+        public const string Err1000 = "Incorrect email or password";
+        public const string Err1004 = "Unactivated account";
     }
 }
