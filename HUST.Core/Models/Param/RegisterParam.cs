@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 namespace HUST.Core.Models.Param
 {
     /// <summary>
-    /// Param đăng nhập
+    /// Param đăng ký tài khoản
     /// </summary>
-    public class LoginParam
+    public class RegisterParam
     {
         public string UserName { get; set; }
         public string Password { get; set; }
