@@ -198,10 +198,11 @@ namespace HUST.Infrastructure.Repositories
             if (id != null && props.Count > 0)
             {
                 var sql = string.Format(
-                    "UPDATE {0} SET {1} WHERE {2}=@Id", 
+                    "UPDATE {0} SET {1} WHERE {2}={3}", 
                     type.Name,
                     string.Join(",", props.Select(prop => $"{prop}=@{prop}")), 
-                    keyAttribute.Name);
+                    keyAttribute.Name,
+                    $"@{keyAttribute.Name}");
 
                 if(transaction != null)
                 {

@@ -107,6 +107,12 @@ namespace HUST.Core.Interfaces.Repository
         /// <param name="entities">Danh sách bản ghi cập nhật</param>
         /// <returns>Kết quả thực hiện</returns>
         Task<bool> Update(IEnumerable<TEntity> entities);
+
+        Task<bool> Update(Type type, object param, IDbTransaction transaction = null);
+
+        Task<bool> Update<T>(object param, IDbTransaction transaction = null);
+
+        Task<bool> Update(object param, IDbTransaction transaction = null);
         #endregion
 
         #region Delete
