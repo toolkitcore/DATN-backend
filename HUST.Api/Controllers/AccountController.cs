@@ -38,14 +38,18 @@ namespace HUST.Api.Controllers
         #endregion
 
         #region Methods
-
-        [HttpPost("Login"), AllowAnonymous]
+        /// <summary>
+        /// Đăng nhập
+        /// </summary>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        [HttpPost("login"), AllowAnonymous]
         public async Task<IServiceResult> Login([FromBody]LoginParam param)
         {
             var res = new ServiceResult();
             try
             {
-                return await _service.Login(param.userName, param.password);
+                return await _service.Login(param.UserName, param.Password);
             }
             catch (Exception ex)
             {
@@ -55,7 +59,11 @@ namespace HUST.Api.Controllers
             return res;
         }
 
-        [HttpGet("Logout")]
+        /// <summary>
+        /// Đăng xuất
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("logout")]
         public async Task<IServiceResult> Logout()
         {
             var res = new ServiceResult();
@@ -71,6 +79,47 @@ namespace HUST.Api.Controllers
             return res;
         }
 
+        /// <summary>
+        /// Đăng ký
+        /// </summary>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        [HttpPost("register"), AllowAnonymous]
+        public async Task<IServiceResult> Register([FromBody] RegisterParam param)
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.Register(param.UserName, param.Password);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Kích hoạt tài khoản
+        /// </summary>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        [HttpGet("activate_account"), AllowAnonymous]
+        public async Task<IServiceResult> ActivateAccount(string token)
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.ActivateAccount(token);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
         #endregion
     }
 }

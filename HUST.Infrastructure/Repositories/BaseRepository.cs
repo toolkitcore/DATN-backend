@@ -118,8 +118,10 @@ namespace HUST.Infrastructure.Repositories
         {
             using (var connection = new MySqlConnection(ConnectionString))
             {
-                var result = await connection.InsertAsync(entity, commandTimeout: ConnectionTimeout);
-                return result > 0;
+                // hàm này trả về id kiểu int của bản ghi được insert, chứ không phải số bản ghi insert thành công
+                // nếu id không phải kiểu int => return 0
+                await connection.InsertAsync(entity, commandTimeout: ConnectionTimeout); 
+                return true;
             }
         }
 
@@ -196,10 +198,11 @@ namespace HUST.Infrastructure.Repositories
             if (id != null && props.Count > 0)
             {
                 var sql = string.Format(
-                    "UPDATE {0} SET {1} WHERE {2}=@Id", 
+                    "UPDATE {0} SET {1} WHERE {2}={3}", 
                     type.Name,
                     string.Join(",", props.Select(prop => $"{prop}=@{prop}")), 
-                    keyAttribute.Name);
+                    keyAttribute.Name,
+                    $"@{keyAttribute.Name}");
 
                 if(transaction != null)
                 {
@@ -334,7 +337,7 @@ namespace HUST.Infrastructure.Repositories
         #endregion
 
         #region Select
-        public async Task<T> SelectObject<T>(Dictionary<string, object> paramDict)
+        public async Task<object> SelectObject<T>(Dictionary<string, object> paramDict)
         {
             var entityTable = FunctionUtil.GetEntityType<T>();
             var whereList = new List<string>();
@@ -362,11 +365,11 @@ namespace HUST.Infrastructure.Repositories
                     return ServiceCollection.Mapper.Map<T>(data);
                 }
 
-                return default(T);
+                return null;
             }
 
         }
-        public async Task<T> SelectObject<T>(object param)
+        public async Task<object> SelectObject<T>(object param)
         {
             var entityTable = FunctionUtil.GetEntityType<T>();
             var whereList = new List<string>();
@@ -396,7 +399,7 @@ namespace HUST.Infrastructure.Repositories
                     return ServiceCollection.Mapper.Map<T>(data);
                 }
 
-                return default;
+                return null;
             }
         }
         public async Task<IEnumerable<T>> SelectObjects<T>(Dictionary<string, object> paramDict)

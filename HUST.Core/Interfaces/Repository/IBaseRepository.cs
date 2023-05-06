@@ -107,6 +107,12 @@ namespace HUST.Core.Interfaces.Repository
         /// <param name="entities">Danh sách bản ghi cập nhật</param>
         /// <returns>Kết quả thực hiện</returns>
         Task<bool> Update(IEnumerable<TEntity> entities);
+
+        Task<bool> Update(Type type, object param, IDbTransaction transaction = null);
+
+        Task<bool> Update<T>(object param, IDbTransaction transaction = null);
+
+        Task<bool> Update(object param, IDbTransaction transaction = null);
         #endregion
 
         #region Delete
@@ -167,7 +173,7 @@ namespace HUST.Core.Interfaces.Repository
         /// <typeparam name="T"></typeparam>
         /// <param name="paramDict"></param>
         /// <returns></returns>
-        Task<T> SelectObject<T>(Dictionary<string, object> paramDict);
+        Task<object> SelectObject<T>(Dictionary<string, object> paramDict);
 
         /// <summary>
         /// Select 1 bản ghi
@@ -175,7 +181,7 @@ namespace HUST.Core.Interfaces.Repository
         /// <typeparam name="T"></typeparam>
         /// <param name="param"></param>
         /// <returns></returns>
-        Task<T> SelectObject<T>(object param);
+        Task<object> SelectObject<T>(object param);
 
         /// <summary>
         /// Select nhiều bản ghi thuộc 1 bảng

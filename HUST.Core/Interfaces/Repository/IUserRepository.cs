@@ -8,5 +8,11 @@ namespace HUST.Core.Interfaces.Repository
 
     public interface IUserRepository: IBaseRepository<user>
     {
+        /// <summary>
+        /// Khởi tạo dữ liệu
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        Task<bool> CreateActivatedAccountData(string userId);
     }
 }
