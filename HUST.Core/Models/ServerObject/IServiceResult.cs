@@ -41,16 +41,17 @@ namespace HUST.Core.Models.ServerObject
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        IServiceResult OnSuccess(object data);
+        IServiceResult OnSuccess(object data = null, string message = null);
 
         /// <summary>
         /// Hàm gọi khi thực hiện có lỗi
         /// </summary>
         /// <param name="errorCode"></param>
-        /// <param name="data"></param>
+        /// <param name="message"></param>
         /// <param name="code"></param>
+        /// <param name="data"></param>
         /// <returns></returns>
-        IServiceResult OnError(int errorCode, object data = null, string code = "");
+        IServiceResult OnError(int errorCode, string message = null, string code = null, object data = null);
 
         /// <summary>
         /// Hàm gọi khi thực hiện bị exception
@@ -58,7 +59,7 @@ namespace HUST.Core.Models.ServerObject
         /// <param name="exception"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        IServiceResult OnException(Exception exception, string message = "");
+        IServiceResult OnException(Exception exception, string message = null);
         #endregion
     }
 }
