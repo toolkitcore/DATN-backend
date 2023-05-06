@@ -3,6 +3,7 @@ using HUST.Core.Extensions;
 using HUST.Core.Interfaces.Repository;
 using HUST.Core.Interfaces.Service;
 using HUST.Core.Services;
+using HUST.Core.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -50,6 +51,11 @@ namespace HUST.Core.Utils
 
             // Đăng nhập bằng jwt
             services.AddJwtAuthorization(configuration);
+
+            // Add send mail service
+            services.Configure<SendgridMailSettings>(configuration.GetSection(AppSettingKey.SendgridMailSettingsSection));
+            services.Configure<MailSettings>(configuration.GetSection(AppSettingKey.MailSettingsSection));
+            services.AddTransient<IMailService, MailService>();
 
             // Inject service mapper, auth, cache
             services.UseAutoMapper();
