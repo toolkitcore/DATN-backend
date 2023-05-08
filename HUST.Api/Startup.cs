@@ -39,8 +39,12 @@ namespace HUST.Api
 
             // Thiết lập Dependencies Inject
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IConceptService, ConceptService>();
+
 
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IConceptRepository, ConceptRepository>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

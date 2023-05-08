@@ -24,5 +24,11 @@ namespace HUST.Core.Utils
         /// <returns></returns>
         Guid? GetCurrentUserId();
 
+        /// <summary>
+        /// Lấy id dictionary đang sử dụng
+        /// </summary>
+        /// <returns></returns>
+        Guid? GetCurrentDictionaryId();
+
     }
 }
