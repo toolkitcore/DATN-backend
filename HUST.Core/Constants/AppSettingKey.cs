@@ -30,13 +30,6 @@ namespace HUST.Core.Constants
         public const string Database = "Database";
     }
 
-    public static class SendgridMailSettingsKey
-    {
-        public const string SendGridKey = "SendGridKey";
-        public const string FromAddress = "FromAddress";
-        public const string FromName = "FromName";
-    }
-
     /// <summary>
     /// Hằng key cache
     /// </summary>

@@ -53,7 +53,6 @@ namespace HUST.Core.Utils
             services.AddJwtAuthorization(configuration);
 
             // Add send mail service
-            services.Configure<SendgridMailSettings>(configuration.GetSection(AppSettingKey.SendgridMailSettingsSection));
             services.Configure<MailSettings>(configuration.GetSection(AppSettingKey.MailSettingsSection));
             services.AddTransient<IMailService, MailService>();
 
