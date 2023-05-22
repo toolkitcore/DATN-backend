@@ -32,6 +32,9 @@ namespace HUST.Core.Utils
                     options.SerializerSettings.ReferenceLoopHandling = SerializeUtil.JSONReferenceLoopHandling;
                     options.SerializerSettings.ContractResolver = null;
                 });
+            // Cache
+            services.AddMemoryCache();
+
             // Cache redis
             var redisCache = configuration.GetConnectionString(ConnectionStringSettingKey.RedisCache);
             if (!string.IsNullOrEmpty(redisCache))

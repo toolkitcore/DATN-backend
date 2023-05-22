@@ -6,6 +6,7 @@ using HUST.Core.Models.DTO;
 using HUST.Core.Models.ServerObject;
 using HUST.Core.Utils;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Net.Http.Headers;
 using System;
@@ -26,6 +27,7 @@ namespace HUST.Core.Services
         private readonly IUserRepository _userRepository;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContext;
+        private readonly IMemoryCache _memCache;
         private readonly ISessionService _sessionService;
         private readonly IMailService _mailService;
 
@@ -39,6 +41,7 @@ namespace HUST.Core.Services
         public AccountService(IUserRepository userRepository,
             IConfiguration configuration,
             IHttpContextAccessor httpContext,
+            IMemoryCache memCache,
             IHustServiceCollection serviceCollection,
             ISessionService sessionService,
             IMailService mailService) : base(serviceCollection)
@@ -46,6 +49,7 @@ namespace HUST.Core.Services
             _userRepository = userRepository;
             _configuration = configuration;
             _httpContext = httpContext;
+            _memCache = memCache;
             _sessionService = sessionService;
             _mailService = mailService;
         }
@@ -53,6 +57,141 @@ namespace HUST.Core.Services
         #endregion
 
         #region Method
+
+        /// <summary>
+        /// Hàm xử lý đăng ký tài khoản
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> Register(string userName, string password)
+        {
+            var res = new ServiceResult();
+
+            // Kiểm tra thông tin đăng ký
+            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
+            {
+                res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+                return res;
+            }
+
+            // Kiểm tra tên đăng nhập (email) đã được sử dụng chưa
+            var existUser = await _userRepository.SelectObject<User>(new Dictionary<string, object>()
+            {
+                { nameof(Models.Entity.user.user_name), userName }
+            }) as User;
+            if (existUser != null)
+            {
+                res.OnError(ErrorCode.Err1001, ErrorMessage.Err1001);
+                return res;
+            }
+
+            // Insert user vào db
+            var user = new Models.Entity.user
+            {
+                user_id = Guid.NewGuid(),
+                user_name = userName,
+                email = userName,
+                password = SecurityUtil.HashPassword(password),
+                created_date = DateTime.Now,
+                status = (int)UserStatus.NotActivated
+            };
+
+            await _userRepository.Insert(user);
+
+            var tokenActivateAccount = this.GenerateTokenActivateAccount(user.user_id.ToString());
+            await _mailService.SendEmailActivateAccount(userName, $"{CallbackLinkActivateAccount}{tokenActivateAccount}");
+
+            res.OnSuccess();
+            return res;
+        }
+
+        /// <summary>
+        /// Hàm xử lý yêu cầu gửi email xác minh tài khoản
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> SendActivateEmail(string userName, string password)
+        {
+            var res = new ServiceResult();
+            var keyThrottle = $"SendActivateEmail_{userName}";
+            // Kiểm tra thời gian chặn api call liên tục
+            var waitTime = GetThrottleTime(keyThrottle);
+            if (waitTime > 0)
+            {
+                res.OnError(ErrorCode.TooManyRequests, ErrorMessage.TooManyRequests, data: waitTime);
+                return res;
+            }
+
+            // Kiểm tra thông tin đăng nhập
+            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
+            {
+                res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+                return res;
+            }
+
+            // Kiểm tra tài khoản: tài khoản phải tồn tại và ở trạng thái chưa kích hoạt
+            var existUser = await _userRepository.SelectObject<User>(new Dictionary<string, object>()
+            {
+                { nameof(Models.Entity.user.user_name), userName },
+                { nameof(Models.Entity.user.status), (int)UserStatus.NotActivated },
+            }) as User;
+
+            if (existUser == null || !SecurityUtil.VerifyPassword(password, existUser.Password))
+            {
+                res.OnError(ErrorCode.Err1002, ErrorMessage.Err1002);
+                return res;
+            }
+
+            var tokenActivateAccount = this.GenerateTokenActivateAccount(existUser.UserId.ToString());
+            await _mailService.SendEmailActivateAccount(userName, $"{CallbackLinkActivateAccount}{tokenActivateAccount}");
+
+            // Nếu tất cả thực hiện thành công => set thời gian chặn call api liên tục
+            SetThrottleTime(keyThrottle);
+
+            res.OnSuccess();
+            return res;
+        }
+
+        /// <summary>
+        /// Hàm xử lý kích hoạt tài khoản
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> ActivateAccount(string token)
+        {
+            var res = new ServiceResult();
+
+            // Đọc token
+            var payload = this.ReadCallbackToken(token);
+            if (payload == null || payload.TimeExpired < DateTime.Now)
+            {
+                return res.OnError(ErrorCode.Err1003, ErrorMessage.Err1003);
+            }
+
+            // Tìm user
+            var user = await _userRepository.SelectObject<User>(new Dictionary<string, object>()
+            {
+                { nameof(Models.Entity.user.user_id), payload.UserId }
+            }) as User;
+
+            if (user == null)
+            {
+                return res.OnError(ErrorCode.Err1003, ErrorMessage.Err1003);
+            }
+
+            if (user.Status == (int)UserStatus.Active)
+            {
+                return res.OnSuccess(message: Properties.Resources.ActivateAccount_AlreadyActivated);
+            }
+
+            // Kích hoạt tài khoản
+            await _userRepository.CreateActivatedAccountData(user.UserId.ToString());
+
+            return res.OnSuccess(message: Properties.Resources.ActivateAccount_Activated);
+        }
+
         /// <summary>
         /// Hàm xử lý login
         /// </summary>
@@ -140,68 +279,87 @@ namespace HUST.Core.Services
         }
 
         /// <summary>
-        /// Hàm xử lý đăng ký tài khoản
+        /// Xử lý gửi email hệ thống chứa link reset mật khẩu tới email mà người dung cung cấp
         /// </summary>
-        /// <param name="userName"></param>
-        /// <param name="password"></param>
+        /// <param name="email"></param>
         /// <returns></returns>
-        public async Task<IServiceResult> Register(string userName, string password)
+        public async Task<IServiceResult> ForgotPassword(string email)
         {
             var res = new ServiceResult();
+            var keyThrottle = $"ForgotPassword_{email}";
+            // Kiểm tra thời gian chặn api call liên tục
+            var waitTime = GetThrottleTime(keyThrottle);
+            if (waitTime > 0)
+            {
+                res.OnError(ErrorCode.TooManyRequests, ErrorMessage.TooManyRequests, data: waitTime);
+                return res;
+            }
 
-            // Kiểm tra thông tin đăng nhập
-            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
+            // Kiểm tra thông tin email
+            if (string.IsNullOrEmpty(email))
             {
                 res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
                 return res;
             }
 
-            // Kiểm tra tên đăng nhập (email) đã được sử dụng chưa
+            // Kiểm tra tài khoản phải tồn tại
             var existUser = await _userRepository.SelectObject<User>(new Dictionary<string, object>()
             {
-                { nameof(Models.Entity.user.user_name), userName }
+                { nameof(Models.Entity.user.user_name), email }
             }) as User;
-            if (existUser != null)
+
+            if (existUser == null)
             {
-                res.OnError(ErrorCode.Err1001, ErrorMessage.Err1001);
+                res.OnError(ErrorCode.Err1002, ErrorMessage.Err1002);
                 return res;
             }
 
-            // Insert user vào db
-            var user = new Models.Entity.user
-            {
-                user_id = Guid.NewGuid(),
-                user_name = userName,
-                email = userName,
-                password = SecurityUtil.HashPassword(password),
-                created_date = DateTime.Now,
-                status = (int)UserStatus.NotActivated
-            };
+            var tokenResetPassword = this.GenerateTokenResetPassword(existUser.UserId.ToString());
+            await _mailService.SendEmailResetPassword(email, $"{CallbackLinkResetPassword}{tokenResetPassword}");
 
-            await _userRepository.Insert(user);
-
-            var tokenActivateAccount = this.GenerateTokenActivateAccount(user.user_id.ToString());
-            await _mailService.SendEmailActivateAccount(userName, $"{CallbackLinkActivateAccount}{tokenActivateAccount}");
+            // Nếu tất cả thực hiện thành công => set thời gian chặn call api liên tục
+            SetThrottleTime(keyThrottle);
 
             res.OnSuccess();
             return res;
         }
 
         /// <summary>
-        /// Hàm xử lý kích hoạt tài khoản
+        /// Kiểm tra quyền truy cập trang reset mật khẩu
         /// </summary>
         /// <param name="token"></param>
         /// <returns></returns>
-        public async Task<IServiceResult> ActivateAccount(string token)
+        public Task<IServiceResult> CheckAccessResetPassword(string token)
+        {
+            var res = new ServiceResult();
+            // Đọc token
+            var payload = this.ReadCallbackToken(token);
+            if (payload == null || payload.TimeExpired < DateTime.Now)
+            {
+                return Task.FromResult(res.OnError(ErrorCode.Err1003, ErrorMessage.Err1003));
+            } 
+
+            return Task.FromResult(res.OnSuccess());
+        }
+
+        /// <summary>
+        /// Xử lý Reset mật khẩu cho người dùng quên mật khẩu.
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="newPassword"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> ResetPassword(string token, string newPassword)
         {
             var res = new ServiceResult();
 
+            // Đọc token
             var payload = this.ReadCallbackToken(token);
-            if(payload == null || payload.TimeExpired < DateTime.UtcNow)
+            if (payload == null || payload.TimeExpired < DateTime.Now)
             {
-                return res.OnError(ErrorCode.Err1003, Properties.Resources.ActivateAccount_CouldNotFind);
+                return res.OnError(ErrorCode.Err1003, ErrorMessage.Err1003);
             }
 
+            // Tìm user
             var user = await _userRepository.SelectObject<User>(new Dictionary<string, object>()
             {
                 { nameof(Models.Entity.user.user_id), payload.UserId }
@@ -209,31 +367,26 @@ namespace HUST.Core.Services
 
             if (user == null)
             {
-                return res.OnError(ErrorCode.Err1003, Properties.Resources.ActivateAccount_CouldNotFind);
+                return res.OnError(ErrorCode.Err1003, ErrorMessage.Err1003);
             }
 
-            if (user.Status == (int)UserStatus.Active)
+            // Cập nhật mật khẩu
+            var paramUpdate = new
             {
-                return res.OnSuccess(message: Properties.Resources.ActivateAccount_AlreadyActivated);
+                user_id = user.UserId,
+                password = SecurityUtil.HashPassword(newPassword)
+            };
+
+            if (await _userRepository.Update(paramUpdate))
+            {
+                res.OnSuccess();
+            }
+            else
+            {
+                res.OnError(ErrorCode.Err9999);
             }
 
-            //var paramUpdate = new
-            //{
-            //    user_id = user.UserId,
-            //    status = (int)UserStatus.Active
-            //};
-
-            //if(await _userRepository.CreateActivatedAccountData)
-            //{
-            //    res.OnSuccess(message: Properties.Resources.ActivateAccount_Activated);
-            //} else
-            //{
-            //    res.OnError(ErrorCode.Err9999);
-            //}
-
-            await _userRepository.CreateActivatedAccountData(user.UserId.ToString());
-
-            return res.OnSuccess(message: Properties.Resources.ActivateAccount_Activated);
+            return res;
         }
         #endregion
 
@@ -266,7 +419,7 @@ namespace HUST.Core.Services
             var payload = new CallbackTokenPayload
             {
                 UserId = userId,
-                TimeExpired = DateTime.UtcNow.AddDays(2)
+                TimeExpired = DateTime.Now.AddDays(2) // Không dùng UtcNow, có thể lúc serialize bị convert
             };
 
             var cypherText = SecurityUtil.EncryptString(SerializeUtil.SerializeObject(payload), configuration: _configuration);
@@ -288,7 +441,7 @@ namespace HUST.Core.Services
             var payload = new CallbackTokenPayload
             {
                 UserId = userId,
-                TimeExpired = DateTime.UtcNow.AddMinutes(30)
+                TimeExpired = DateTime.Now.AddMinutes(30) // Không dùng UtcNow
             };
 
             var cypherText = SecurityUtil.EncryptString(SerializeUtil.SerializeObject(payload), configuration: _configuration);
@@ -319,13 +472,60 @@ namespace HUST.Core.Services
                 var payload = SerializeUtil.DeserializeObject<CallbackTokenPayload>(plainText);
                 return payload;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }
             
 
         }
+
+        /// <summary>
+        /// Lấy key cache throttle hạn chế thời gian call api
+        /// </summary>
+        /// <returns></returns>
+        private string GetThrottleCacheKey(string name)
+        {
+            var clientIp = _httpContext.HttpContext.Connection.RemoteIpAddress.ToString();
+            return $"{name}-{clientIp}";
+        }
+        /// <summary>
+        /// Kiểm tra thời gian cần chờ trước khi call api liên tục
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="seconds"></param>
+        /// <returns></returns>
+        private double GetThrottleTime(string name)
+        {
+            var key = GetThrottleCacheKey(name);
+            double waitTime = 0;
+
+            var now = DateTime.Now;
+            var timeExpired = _memCache.Get<DateTime?>(key);
+            if (timeExpired != null)
+            {
+                waitTime = ((DateTime)timeExpired - now).TotalSeconds;
+            }
+
+            return waitTime;
+        }
+
+        /// <summary>
+        /// Set thời gian chặn call api liên tục
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="seconds"></param>
+        private void SetThrottleTime(string name, int seconds = 120)
+        {
+            var key = GetThrottleCacheKey(name);
+            var timeExpired = DateTime.Now.AddSeconds(seconds);
+            _memCache.Set(key,
+                timeExpired,
+                timeExpired
+            );
+        }
+
+
         #endregion
 
     }

@@ -11,6 +11,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using HUST.Core.Constants;
+using System.Net.Http;
 
 namespace HUST.Core.Utils
 {
@@ -94,6 +95,11 @@ namespace HUST.Core.Utils
             return SerializeUtil.DeserializeObject<T>(str);
         }
 
+        /// <summary>
+        /// Snakecase to Pascal case
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
         public static string ToPascalCase(this string str)
         {
             return str
@@ -103,11 +109,21 @@ namespace HUST.Core.Utils
 
         }
 
+        /// <summary>
+        /// To snake case
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
         public static string ToSnakeCase(this string str)
         {
             return string.Concat(str.Select((x, i) => i > 0 && char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToLower();
         }
 
+        /// <summary>
+        /// Lấy type lớp entity
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static Type GetEntityType<T>()
         {
             //if (typeof(T).IsAssignableFrom(typeof(BaseDTO)))
@@ -123,6 +139,11 @@ namespace HUST.Core.Utils
             return Type.GetType($"HUST.Core.Models.Entity.{entityName},HUST.Core");
         }
 
+        /// <summary>
+        /// Lấy type lớp DTO
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static Type GetDTOType<T>()
         {
             if (typeof(T).IsAssignableFrom(typeof(BaseEntity)))
@@ -167,5 +188,6 @@ namespace HUST.Core.Utils
             var prop = dtoType.GetProperties().FirstOrDefault(x => Attribute.IsDefined(x, typeof(System.ComponentModel.DataAnnotations.KeyAttribute)));
             return prop;
         }
+
     }
 }

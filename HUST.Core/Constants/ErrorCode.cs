@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,6 +12,11 @@ namespace HUST.Core.Constants
     /// </summary>
     public static class ErrorCode
     {
+        /// <summary>
+        /// Too many requests
+        /// </summary>
+        public const int TooManyRequests = (int)HttpStatusCode.TooManyRequests;
+
         /// <summary>
         /// Incorrect email or password
         /// </summary>
@@ -102,6 +108,8 @@ namespace HUST.Core.Constants
     /// </summary>
     public static class ErrorMessage
     {
+        public const string TooManyRequests = "Too many requests";
+
         public const string Err1000 = "Incorrect email or password";
         public const string Err1001 = "Email already in use";
         public const string Err1002 = "Invalid account";

@@ -11,6 +11,29 @@ namespace HUST.Core.Interfaces.Service
     public interface IAccountService
     {
         /// <summary>
+        /// Xử lý đăng ký tài khoản
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        Task<IServiceResult> Register(string userName, string password);
+
+        /// <summary>
+        /// Xử lý yêu cầu gửi email xác minh tài khoản
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        Task<IServiceResult> SendActivateEmail(string userName, string password);
+
+        /// <summary>
+        /// Thực hiện kích hoạt tài khoản người dùng
+        /// </summary>
+        /// <param name="token">Token kích hoạt</param>
+        /// <returns></returns>
+        Task<IServiceResult> ActivateAccount(string token);
+
+        /// <summary>
         /// Xử lý login
         /// </summary>
         /// <param name="userName"></param>
@@ -24,19 +47,27 @@ namespace HUST.Core.Interfaces.Service
         /// <returns></returns>
         Task<IServiceResult> Logout();
 
-        /// <summary>
-        /// Xử lý đăng ký tài khoản
-        /// </summary>
-        /// <param name="userName"></param>
-        /// <param name="password"></param>
-        /// <returns></returns>
-        Task<IServiceResult> Register(string userName, string password);
 
         /// <summary>
-        /// Kích hoạt tài khoản
+        /// Xử lý gửi email hệ thống chứa link reset mật khẩu tới email mà người dung cung cấp
         /// </summary>
-        /// <param name="token">Token kích hoạt</param>
+        /// <param name="email"></param>
         /// <returns></returns>
-        Task<IServiceResult> ActivateAccount(string token);
+        Task<IServiceResult> ForgotPassword(string email);
+
+        /// <summary>
+        /// Kiểm tra quyền truy cập trang reset mật khẩu
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        Task<IServiceResult> CheckAccessResetPassword(string token);
+
+        /// <summary>
+        /// Xử lý Reset mật khẩu cho người dùng quên mật khẩu.
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="newPassword"></param>
+        /// <returns></returns>
+        Task<IServiceResult> ResetPassword(string token, string newPassword);
     }
 }

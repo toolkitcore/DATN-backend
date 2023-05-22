@@ -12,12 +12,6 @@ namespace HUST.Core.Interfaces.Service
     public interface IBaseService<TEntity> where TEntity : class
     {
         /// <summary>
-        /// Service xử lý khi lấy tất cả dữ liệu
-        /// </summary>
-        /// <returns>Đối tượng ServiceResult chứa kết quả thực hiện</returns>
-        Task<ServiceResult> GetAll();
-
-        /// <summary>
         /// Service xử lý khi lấy dữ liệu theo Khóa chính (id)
         /// </summary>
         /// <param name="entityId">Khóa chính</param>
@@ -45,12 +39,5 @@ namespace HUST.Core.Interfaces.Service
         /// <param name="entityId">Khóa chính</param>
         /// <returns>Đối tượng ServiceResult chứa kết quả thực hiện</returns>
         Task<ServiceResult> Delete(Guid entityId);
-
-        /// <summary>
-        /// Service xử lý khi xóa nhiều bản ghi
-        /// </summary>
-        /// <param name="entityIds">Danh sách khóa chính</param>
-        /// <returns>Đối tượng ServiceResult chứa kết quả thực hiện</returns>
-        Task<ServiceResult> DeleteMany(List<Guid> entityIds);
     }
 }

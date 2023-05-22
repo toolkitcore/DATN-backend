@@ -11,7 +11,7 @@ namespace HUST.Core.Constants
     /// </summary>
     public static class Constant
     {
-        public const string Token = "Token";
+       
     }
 
     /// <summary>
