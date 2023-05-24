@@ -43,6 +43,11 @@ namespace HUST.Core.Constants
         public const int Err1004 = 1004;
 
         /// <summary>
+        /// Dictionary doesn't exist
+        /// </summary>
+        public const int Err2000 = 2000;
+
+        /// <summary>
         /// Dictionary name already in use
         /// </summary>
         public const int Err2001 = 2001;
@@ -116,6 +121,7 @@ namespace HUST.Core.Constants
         public const string Err1003 = "Invalid verification token";
         public const string Err1004 = "Unactivated account";
 
+        public const string Err2000 = "Dictionary doesn't exist";
         public const string Err2001 = "Dictionary name already in use";
         public const string Err2002 = "Dictionary is in use";
         public const string Err2003 = "Source dictionary is empty";
