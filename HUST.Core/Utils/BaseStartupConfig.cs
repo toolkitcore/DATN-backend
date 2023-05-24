@@ -32,6 +32,9 @@ namespace HUST.Core.Utils
                     options.SerializerSettings.ReferenceLoopHandling = SerializeUtil.JSONReferenceLoopHandling;
                     options.SerializerSettings.ContractResolver = null;
                 });
+            // Cache
+            services.AddMemoryCache();
+
             // Cache redis
             var redisCache = configuration.GetConnectionString(ConnectionStringSettingKey.RedisCache);
             if (!string.IsNullOrEmpty(redisCache))
@@ -48,12 +51,12 @@ namespace HUST.Core.Utils
             }
             services.AddTransient<IDistributedCacheUtil, DistributedCacheUtil>();
             services.AddSingleton<ISessionService, SessionService>();
+            services.AddScoped<StorageUtil>();
 
             // Đăng nhập bằng jwt
             services.AddJwtAuthorization(configuration);
 
             // Add send mail service
-            services.Configure<SendgridMailSettings>(configuration.GetSection(AppSettingKey.SendgridMailSettingsSection));
             services.Configure<MailSettings>(configuration.GetSection(AppSettingKey.MailSettingsSection));
             services.AddTransient<IMailService, MailService>();
 

@@ -18,6 +18,12 @@ namespace HUST.Infrastructure.Repositories
         #endregion
 
         #region Methods
+
+        /// <summary>
+        /// Thực hiện khởi tạo dữ liệu tài khoản khi tài khoản được kích hoạt
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
         public async Task<bool> CreateActivatedAccountData(string userId)
         {
             using (var connection = await this.CreateConnectionAsync())
@@ -31,7 +37,6 @@ namespace HUST.Infrastructure.Repositories
                     commandTimeout: ConnectionTimeout);
                 return true;
             }
-
         }
         #endregion
 

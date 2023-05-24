@@ -11,10 +11,10 @@ namespace HUST.Core.Constants
     /// </summary>
     public static class AuthKey
     {
-        public static string Authorization => "Authorization";
-        public static string Bearer => "Bearer";
-        public static string TokenExpired => "Token-Expired";
-        public static string SessionId => "x-session-id";
+        public const string Authorization = "Authorization";
+        public const string Bearer = "Bearer";
+        public const string TokenExpired = "Token-Expired";
+        public const string SessionId = "x-session-id";
     }
 
     /// <summary>
@@ -22,11 +22,11 @@ namespace HUST.Core.Constants
     /// </summary>
     public static class JwtClaimKey
     {
-        public static string UserId => "UserId";
-        public static string UserName => "UserName";
-        public static string Email => "Email";
-        public static string DictionaryId => "DictionaryId";
-        public static string Status => "Status";
+        public const string UserId = "UserId";
+        public const string UserName = "UserName";
+        public const string Email = "Email";
+        public const string DictionaryId = "DictionaryId";
+        public const string Status = "Status";
     }
 
 }

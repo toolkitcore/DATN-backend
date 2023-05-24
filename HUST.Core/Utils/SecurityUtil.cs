@@ -56,12 +56,12 @@ namespace HUST.Core.Utils
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                        new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+                        //new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                        //new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
                         new Claim(JwtClaimKey.UserId, user.UserId.ToString()),
                         new Claim(JwtClaimKey.UserName, user.UserName ?? ""),
-                        new Claim(JwtClaimKey.Email, user.Email ?? ""),
-                        new Claim(JwtClaimKey.Status, ((int)user.Status).ToString()),
+                        //new Claim(JwtClaimKey.Email, user.Email ?? ""),
+                        //new Claim(JwtClaimKey.Status, ((int)user.Status).ToString()),
                         new Claim(JwtClaimKey.DictionaryId, user.DictionaryId?.ToString() ?? ""),
                      }),
                 Expires = DateTime.UtcNow.AddMinutes(lifeTime),

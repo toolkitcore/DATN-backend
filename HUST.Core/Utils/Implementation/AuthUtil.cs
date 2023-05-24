@@ -101,6 +101,15 @@ namespace HUST.Core.Utils
             return this.User.UserId;
         }
 
+        /// <summary>
+        /// Lấy id dictionary đang sử dụng
+        /// </summary>
+        /// <returns></returns>
+        public Guid? GetCurrentDictionaryId()
+        {
+            return this.User.DictionaryId;
+        }
+
         #endregion
 
 
