@@ -3,6 +3,7 @@ using HUST.Core.Enums;
 using HUST.Core.Interfaces.Repository;
 using HUST.Core.Interfaces.Service;
 using HUST.Core.Models.DTO;
+using HUST.Core.Models.Entity;
 using HUST.Core.Models.ServerObject;
 using HUST.Core.Utils;
 using Microsoft.AspNetCore.Http;
@@ -25,6 +26,8 @@ namespace HUST.Core.Services
         #region Field
 
         private readonly IUserRepository _userRepository;
+        private readonly IDictionaryRepository _dictionaryRepository;
+
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContext;
         private readonly IMemoryCache _memCache;
@@ -39,6 +42,7 @@ namespace HUST.Core.Services
         #region Constructor
 
         public AccountService(IUserRepository userRepository,
+            IDictionaryRepository dictionaryRepository,
             IConfiguration configuration,
             IHttpContextAccessor httpContext,
             IMemoryCache memCache,
@@ -47,6 +51,7 @@ namespace HUST.Core.Services
             IMailService mailService) : base(serviceCollection)
         {
             _userRepository = userRepository;
+            _dictionaryRepository = dictionaryRepository;
             _configuration = configuration;
             _httpContext = httpContext;
             _memCache = memCache;
@@ -232,8 +237,19 @@ namespace HUST.Core.Services
             {
                 { nameof(Models.Entity.dictionary.user_id), user.UserId }
             });
-            var lastDictionary = lstDictionary?.OrderByDescending(x => x.LastViewAt)?.FirstOrDefault();
-            user.DictionaryId = lastDictionary?.DictionaryId;
+
+            var lastDictionary = lstDictionary
+                .OrderByDescending(x => x.LastViewAt) // null sẽ xuống cuối
+                .ThenByDescending(x => x.CreatedDate) // nếu cùng lastViewAt (vd: cùng null) => sx theo thời gian tạo mới nhất
+                .FirstOrDefault();
+            user.DictionaryId = lastDictionary.DictionaryId;
+
+            // Cập nhật thời điểm xem dictionary
+            var _ = await _dictionaryRepository.Update(new
+            {
+                dictionary_id = lastDictionary.DictionaryId,
+                last_view_at = DateTime.Now
+            });
 
             // Sinh token, session
             var sessionId = GenerateSession(user);
@@ -251,8 +267,8 @@ namespace HUST.Core.Services
                 user.UserName,
                 user.DisplayName,
                 user.Avatar,
-                lastDictionary?.DictionaryId,
-                lastDictionary?.DictionaryName
+                lastDictionary.DictionaryId,
+                lastDictionary.DictionaryName
             });
 
             return res;
