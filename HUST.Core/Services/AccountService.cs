@@ -251,14 +251,12 @@ namespace HUST.Core.Services
                 last_view_at = DateTime.Now
             });
 
+            // Xóa token, session nếu có
+            this.RemoveCurrentSession();
             // Sinh token, session
-            var sessionId = GenerateSession(user);
-            _httpContext.HttpContext.Response.Cookies.Append(AuthKey.SessionId, sessionId, new CookieOptions
-            {
-                Expires = DateTime.Now.AddMinutes(SecurityUtil.GetAuthTokenLifeTime(this._configuration)),
-                HttpOnly = true
-            });
-
+            var sessionId = this.GenerateSession(user);
+            // Gán session vào response trả về
+            this.SetResponseSessionCookie(sessionId);
 
             res.OnSuccess(new
             {
@@ -281,15 +279,8 @@ namespace HUST.Core.Services
         public Task<IServiceResult> Logout()
         {
             var res = new ServiceResult();
-            var reqHeader = _httpContext.HttpContext.Request.Headers;
-            if (reqHeader.ContainsKey(AuthKey.SessionId))
-            {
-                var sessionId = reqHeader[AuthKey.SessionId];
-                if (!string.IsNullOrEmpty(sessionId))
-                {
-                    _sessionService.RemoveToken(sessionId);
-                }
-            }
+
+            this.RemoveCurrentSession();
 
             return Task.FromResult(res.OnSuccess());
         }
@@ -413,12 +404,41 @@ namespace HUST.Core.Services
         /// Sinh session mới
         /// </summary>
         /// <param name="user"></param>
-        private string GenerateSession(User user)
+        public string GenerateSession(User user)
         {
             var sessionId = Guid.NewGuid().ToString();
             var token = SecurityUtil.GenerateToken(user, _configuration);
             _sessionService.SetToken(sessionId, token);
             return sessionId;
+        }
+
+        /// <summary>
+        /// Xóa session cũ
+        /// </summary>
+        public void RemoveCurrentSession()
+        {
+            var reqHeader = _httpContext.HttpContext.Request.Headers; // chỉ cần check header vì middleware đã gán từ cookie lên header
+            if (reqHeader.ContainsKey(AuthKey.SessionId))
+            {
+                var sessionId = reqHeader[AuthKey.SessionId];
+                if (!string.IsNullOrEmpty(sessionId))
+                {
+                    _sessionService.RemoveToken(sessionId);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Set session cho request response hiện tại
+        /// </summary>
+        /// <param name="sessionId"></param>
+        public void SetResponseSessionCookie(string sessionId)
+        {
+            _httpContext.HttpContext.Response.Cookies.Append(AuthKey.SessionId, sessionId, new CookieOptions
+            {
+                Expires = DateTime.Now.AddMinutes(SecurityUtil.GetAuthTokenLifeTime(this._configuration)),
+                HttpOnly = true
+            });
         }
 
         /// <summary>
@@ -441,7 +461,6 @@ namespace HUST.Core.Services
             var cypherText = SecurityUtil.EncryptString(SerializeUtil.SerializeObject(payload), configuration: _configuration);
             return Convert.ToBase64String(Encoding.UTF8.GetBytes(cypherText));
         }
-
 
         /// <summary>
         /// Sinh token reset mật khẩu
@@ -505,6 +524,7 @@ namespace HUST.Core.Services
             var clientIp = _httpContext.HttpContext.Connection.RemoteIpAddress.ToString();
             return $"{name}-{clientIp}";
         }
+        
         /// <summary>
         /// Kiểm tra thời gian cần chờ trước khi call api liên tục
         /// </summary>
@@ -540,7 +560,6 @@ namespace HUST.Core.Services
                 timeExpired
             );
         }
-
 
         #endregion
 

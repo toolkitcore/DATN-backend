@@ -1,4 +1,5 @@
-﻿using HUST.Core.Models.ServerObject;
+﻿using HUST.Core.Models.DTO;
+using HUST.Core.Models.ServerObject;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -69,5 +70,25 @@ namespace HUST.Core.Interfaces.Service
         /// <param name="newPassword"></param>
         /// <returns></returns>
         Task<IServiceResult> ResetPassword(string token, string newPassword);
+
+
+        // TODO: 3 method bên dưới cần xem xét lại sự phù hợp với interface này
+
+        /// <summary>
+        /// Sinh session mới
+        /// </summary>
+        /// <param name="user"></param>
+        string GenerateSession(User user);
+
+        /// <summary>
+        /// Xóa session cũ
+        /// </summary>
+        void RemoveCurrentSession();
+
+        /// <summary>
+        /// Set session cho request response hiện tại
+        /// </summary>
+        /// <param name="sessionId"></param>
+        void SetResponseSessionCookie(string sessionId);
     }
 }
