@@ -51,6 +51,7 @@ namespace HUST.Core.Utils
             }
             services.AddTransient<IDistributedCacheUtil, DistributedCacheUtil>();
             services.AddSingleton<ISessionService, SessionService>();
+            services.AddScoped<StorageUtil>();
 
             // Đăng nhập bằng jwt
             services.AddJwtAuthorization(configuration);

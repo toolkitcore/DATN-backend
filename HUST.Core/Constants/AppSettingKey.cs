@@ -14,7 +14,6 @@ namespace HUST.Core.Constants
         public const string AppSettingsSection = "AppSettings";
         public const string ConnectionStringsSection = "ConnectionStrings";
         public const string APIUrlSection = "APIUrl";
-        public const string SendgridMailSettingsSection = "SendgridMailSettings";
         public const string MailSettingsSection = "MailSettings";
 
         public const string JwtSecretKey = "JwtSecretKey";
@@ -22,6 +21,13 @@ namespace HUST.Core.Constants
         public const string JwtAudience = "JwtAudience";
         public const string JwtLifeTime = "JwtLifeTime";
         public const string SecretKey = "SecretKey";
+
+        public class FirebaseConfigs {
+            public const string Email = "FirebaseConfigs:Email";
+            public const string Password = "FirebaseConfigs:Password";
+            public const string Storage = "FirebaseConfigs:Storage";
+            public const string APIKey = "FirebaseConfigs:APIKey";
+        }
     }
 
     public static class ConnectionStringSettingKey

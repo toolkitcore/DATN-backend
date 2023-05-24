@@ -39,10 +39,14 @@ namespace HUST.Api
 
             // Thiết lập Dependencies Inject
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IAuditLogService, AuditLogService>();
             services.AddScoped<IConceptService, ConceptService>();
 
 
+
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IAuditLogRepository, AuditLogRepository>();
             services.AddScoped<IConceptRepository, ConceptRepository>();
 
         }
