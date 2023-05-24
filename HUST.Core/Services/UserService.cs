@@ -16,7 +16,7 @@ using User = HUST.Core.Models.DTO.User;
 namespace HUST.Core.Services
 {
     /// <summary>
-    /// Serivce xử lý account
+    /// Serivce xử lý user
     /// </summary>
     public class UserService : BaseService, IUserService
     {
