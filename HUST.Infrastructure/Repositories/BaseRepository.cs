@@ -104,13 +104,13 @@ namespace HUST.Infrastructure.Repositories
         public async Task<bool> Insert(TEntity entity, IDbTransaction dbTransaction)
         {
             var connection = dbTransaction.Connection;
-            var result = await connection.InsertAsync(entity, dbTransaction, ConnectionTimeout);
-            return result > 0;
+            await connection.InsertAsync(entity, dbTransaction, ConnectionTimeout);
+            return true;
         }
         public async Task<bool> Insert(IEnumerable<TEntity> entities, IDbTransaction dbTransaction)
         {
             var connection = dbTransaction.Connection;
-            var result = await connection.InsertAsync(entities, dbTransaction, ConnectionTimeout);
+            var result = await connection.InsertAsync(entities, dbTransaction, ConnectionTimeout); // Cần kiểm nghiệm
             return result > 0;
         }
 
