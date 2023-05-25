@@ -117,7 +117,7 @@ namespace HUST.Core.Services
                     {
                         dictionary_id = dict.DictionaryId,
                         last_view_at = now
-                    });
+                    }, transaction);
 
                     if (result)
                     {
@@ -125,7 +125,7 @@ namespace HUST.Core.Services
                         {
                             dictionary_id = oldDictionaryId,
                             last_view_at = now.AddMinutes(-1) // 1 phút trước
-                        });
+                        }, transaction);
                     }
 
                     if (result)
@@ -201,39 +201,23 @@ namespace HUST.Core.Services
                 return res.OnError(ErrorCode.Err2001, ErrorMessage.Err2001);
             }
 
-            // Transaction thêm từ điển mới
-            using (var connection = await _repository.CreateConnectionAsync())
+            // Transaction thêm từ điển mới: thêm từ điển + clone dữ liệu nếu cần
+            // Exception sẽ không được bắt tại đây (mà bắt ở controller) => không tự động rollback được transaction
+            // => có thể bổ sung try catch để bắt exception rồi rollback
+            // Có thể không dùng transaction: vì insert luôn trả về true, store luôn trả về true
+            var newDictionaryId = Guid.NewGuid();
+            _ = await _repository.Insert(new dictionary
             {
-                using (var transaction = connection.BeginTransaction())
-                {
-                    var result = true;
-                    var now = DateTime.Now;
+                dictionary_id = newDictionaryId,
+                dictionary_name = dictionaryName,
+                user_id = userId,
+                created_date = DateTime.Now,
+                last_view_at = null
+            });
 
-                    result = await _repository.Insert(new dictionary
-                    {
-                        dictionary_id = Guid.NewGuid(),
-                        dictionary_name = dictionaryName,
-                        user_id = userId,
-                        created_date = DateTime.Now,
-                        last_view_at = null
-                    });
-
-                    if (result && cloneDictionary != null)
-                    {
-                        // TODO
-                    }
-
-                    if (result)
-                    {
-                        transaction.Commit();
-                        res.OnSuccess();
-                    }
-                    else
-                    {
-                        transaction.Rollback();
-                        res.OnError(ErrorCode.Err9999);
-                    }
-                }
+            if (cloneDictionary != null)
+            {
+                _ = await _repository.CloneDictionaryData(cloneDictionary.DictionaryId, newDictionaryId);
             }
 
             return res;
