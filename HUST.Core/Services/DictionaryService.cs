@@ -77,7 +77,7 @@ namespace HUST.Core.Services
             var user = this.ServiceCollection.AuthUtil.GetCurrentUser();
             var oldDictionaryId = user.DictionaryId;
 
-            if(string.IsNullOrEmpty(dictionaryId))
+            if (string.IsNullOrEmpty(dictionaryId))
             {
                 return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
             }
@@ -162,10 +162,13 @@ namespace HUST.Core.Services
             var res = new ServiceResult();
 
             // Kiểm tra tham số
-            if(string.IsNullOrEmpty(dictionaryName))
+            if (string.IsNullOrWhiteSpace(dictionaryName))
             {
                 return res.OnError(ErrorCode.Err9000);
             }
+
+            // Bỏ khoảng trắng 2 đầu
+            dictionaryName = dictionaryName.Trim();
 
             var userId = this.ServiceCollection.AuthUtil.GetCurrentUserId();
 
@@ -183,7 +186,7 @@ namespace HUST.Core.Services
 
             // Lấy ra từ điển dùng để clone
             Models.DTO.Dictionary cloneDictionary = null;
-            if(!string.IsNullOrEmpty(cloneDictionaryId))
+            if (!string.IsNullOrEmpty(cloneDictionaryId))
             {
                 cloneDictionary = await _repository.SelectObject<Models.DTO.Dictionary>(new Dictionary<string, object>
                 {
@@ -191,7 +194,7 @@ namespace HUST.Core.Services
                     { nameof(dictionary.user_id), userId },
                 }) as Models.DTO.Dictionary;
             }
-            
+
 
             if (existDictionaryWithSameName != null)
             {
@@ -234,6 +237,73 @@ namespace HUST.Core.Services
             }
 
             return res;
+        }
+
+        /// <summary>
+        /// Thực hiện cập nhật tên từ điển
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <param name="dictionaryName"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> UpdateDictionary(string dictionaryId, string dictionaryName)
+        {
+            var res = new ServiceResult();
+
+            // Kiểm tra tham số
+            if (string.IsNullOrWhiteSpace(dictionaryName))
+            {
+                return res.OnError(ErrorCode.Err9000);
+            }
+
+            // Bỏ khoảng trắng 2 đầu
+            dictionaryName = dictionaryName.Trim();
+
+            var userId = this.ServiceCollection.AuthUtil.GetCurrentUserId();
+
+            // Kiểm tra tên đã được sử dụng chưa
+            var existDictionaryWithSameName = await _repository.SelectObject<Models.DTO.Dictionary>(new Dictionary<string, object>
+            {
+                { nameof(dictionary.user_id), userId },
+                { nameof(dictionary.dictionary_name), dictionaryName }
+            }) as Models.DTO.Dictionary;
+
+            if (existDictionaryWithSameName != null)
+            {
+                if (string.Equals(existDictionaryWithSameName.DictionaryId.ToString(), dictionaryId))
+                {
+                    return res.OnSuccess();
+                }
+                return res.OnError(ErrorCode.Err2001, ErrorMessage.Err2001);
+            }
+
+            // Kiểm tra người dùng có dictionary này không
+            // Vì có thể dictionaryId tồn tại, nhưng không phải của user này
+            var dict = await _repository.SelectObject<Models.DTO.Dictionary>(new Dictionary<string, object>
+            {
+                { nameof(dictionary.user_id), userId },
+                { nameof(dictionary.dictionary_id), dictionaryId }
+            }) as Models.DTO.Dictionary;
+            if (dict == null)
+            {
+                return res.OnError(ErrorCode.Err2000, ErrorMessage.Err2000);
+            }
+
+            // Cập nhật tên từ điển
+            var result = await _repository.Update(new
+            {
+                dictionary_id = dictionaryId,
+                dictionary_name = dictionaryName,
+                modified_date = DateTime.Now
+            });
+
+            if (result)
+            {
+                return res.OnSuccess();
+            }
+            else
+            {
+                return res.OnError(ErrorCode.Err9999);
+            }
         }
         #endregion
 

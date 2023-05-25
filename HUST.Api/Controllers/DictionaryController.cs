@@ -83,5 +83,29 @@ namespace HUST.Api.Controllers
 
             return res;
         }
+
+        /// <summary>
+        /// Thực hiện cập nhật tên từ điển
+        /// </summary>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        [HttpPatch("update_dictionary")]
+        public async Task<IServiceResult> UpdateDictionary([FromBody] Core.Models.DTO.Dictionary param)
+        {
+            // param.DictionaryId null thì sẽ có exception của .NET => lỗi 400
+
+
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.UpdateDictionary(param.DictionaryId.ToString(), param.DictionaryName);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
     }
 }
