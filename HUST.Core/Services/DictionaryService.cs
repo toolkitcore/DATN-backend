@@ -305,6 +305,58 @@ namespace HUST.Core.Services
                 return res.OnError(ErrorCode.Err9999);
             }
         }
+
+        /// <summary>
+        /// Thực hiện xóa từ điển
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> DeleteDictionary(string dictionaryId)
+        {
+            var res = new ServiceResult();
+            var currentUserId = this.ServiceCollection.AuthUtil.GetCurrentUserId();
+            var currentDictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId();
+
+            var lstDictionary = (await _repository.SelectObjects<Models.DTO.Dictionary>(new Dictionary<string, object>()
+            {
+                { nameof(dictionary.user_id), currentUserId}
+            }))?.ToList();
+
+            // Nếu không có bất cứ từ điển nào
+            if(lstDictionary == null || lstDictionary.Count == 0)
+            {
+                return res.OnError(ErrorCode.Err9999);
+            }
+
+            // Kiểm tra người dùng có sở hữu từ điển này không
+            var dictionaryItem = lstDictionary.Find(x => string.Equals(dictionaryId, x.DictionaryId.ToString()));
+            if(dictionaryItem == null)
+            {
+                return res.OnError(ErrorCode.Err2000, ErrorMessage.Err2000);
+            }
+
+            // Kiểm tra từ điển có đang sử dụng hay không
+            var isDictionaryInUse = string.Equals(dictionaryId, currentDictionaryId)
+                || (lstDictionary.Count == 1 && string.Equals(dictionaryId, lstDictionary[0].DictionaryId.ToString())); // chú ý ToString
+            if (isDictionaryInUse)
+            {
+                return res.OnError(ErrorCode.Err2002, ErrorMessage.Err2002);
+            }
+
+            var result = await _repository.Delete(new
+            {
+                dictionary_id = dictionaryItem.DictionaryId,
+                user_id = currentUserId
+            });
+
+            if(result)
+            {
+                return res.OnSuccess();
+            } else
+            {
+                return res.OnError(ErrorCode.Err9999);
+            }
+        }
         #endregion
 
     }

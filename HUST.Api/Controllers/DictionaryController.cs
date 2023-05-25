@@ -107,5 +107,26 @@ namespace HUST.Api.Controllers
 
             return res;
         }
+
+        /// <summary>
+        /// Thực hiện xóa từ điển
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        [HttpDelete("delete_dictionary")]
+        public async Task<IServiceResult> DeleteDictionary([FromQuery] string dictionaryId)
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.DeleteDictionary(dictionaryId);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
     }
 }

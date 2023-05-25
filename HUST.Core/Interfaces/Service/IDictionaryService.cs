@@ -38,5 +38,12 @@ namespace HUST.Core.Interfaces.Service
         /// <param name="dictionaryName"></param>
         /// <returns></returns>
         Task<IServiceResult> UpdateDictionary(string dictionaryId, string dictionaryName);
+
+        /// <summary>
+        /// Thực hiện xóa từ điển
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        Task<IServiceResult> DeleteDictionary(string dictionaryId);
     }
 }

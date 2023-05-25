@@ -145,6 +145,12 @@ namespace HUST.Core.Interfaces.Repository
         /// <param name="entities">danh sách bản ghi</param>
         /// <returns>Kết quả thực hiện</returns>
         Task<bool> Delete(IEnumerable<TEntity> entities);
+
+        Task<bool> Delete(Type entityTable, object param, IDbTransaction transaction = null);
+
+        Task<bool> Delete<T>(object param, IDbTransaction transaction = null);
+
+        Task<bool> Delete(object param, IDbTransaction transaction = null);
         #endregion
 
         #region Check duplicate
