@@ -54,7 +54,7 @@ namespace HUST.Infrastructure.Repositories
             using (var connection = await this.CreateConnectionAsync())
             {
                 res = await connection.QueryAsync<audit_log>(
-                    sql: $"Proc_GetLogsFilterPaging",
+                    sql: $"Proc_Log_GetLogsFilterPaging",
                     param: parameters,
                     commandType: CommandType.StoredProcedure,
                     commandTimeout: ConnectionTimeout);
