@@ -151,9 +151,89 @@ namespace HUST.Core.Services
             return res;
         }
 
-        public Task<IServiceResult> AddDictionary()
+        /// <summary>
+        /// Thêm 1 từ điển mới 
+        /// </summary>
+        /// <param name="dictionaryName"></param>
+        /// <param name="cloneDictionaryId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> AddDictionary(string dictionaryName, string cloneDictionaryId)
         {
-            throw new NotImplementedException();
+            var res = new ServiceResult();
+
+            // Kiểm tra tham số
+            if(string.IsNullOrEmpty(dictionaryName))
+            {
+                return res.OnError(ErrorCode.Err9000);
+            }
+
+            var userId = this.ServiceCollection.AuthUtil.GetCurrentUserId();
+
+            // Kiểm tra tên đã được sử dụng chưa
+            var existDictionaryWithSameName = await _repository.SelectObject<Models.DTO.Dictionary>(new Dictionary<string, object>
+            {
+                { nameof(dictionary.user_id), userId },
+                { nameof(dictionary.dictionary_name), dictionaryName }
+            }) as Models.DTO.Dictionary;
+
+            if (existDictionaryWithSameName != null)
+            {
+                return res.OnError(ErrorCode.Err2001, ErrorMessage.Err2001);
+            }
+
+            // Lấy ra từ điển dùng để clone
+            Models.DTO.Dictionary cloneDictionary = null;
+            if(!string.IsNullOrEmpty(cloneDictionaryId))
+            {
+                cloneDictionary = await _repository.SelectObject<Models.DTO.Dictionary>(new Dictionary<string, object>
+                {
+                    { nameof(dictionary.dictionary_id), cloneDictionaryId },
+                    { nameof(dictionary.user_id), userId },
+                }) as Models.DTO.Dictionary;
+            }
+            
+
+            if (existDictionaryWithSameName != null)
+            {
+                return res.OnError(ErrorCode.Err2001, ErrorMessage.Err2001);
+            }
+
+            // Transaction thêm từ điển mới
+            using (var connection = await _repository.CreateConnectionAsync())
+            {
+                using (var transaction = connection.BeginTransaction())
+                {
+                    var result = true;
+                    var now = DateTime.Now;
+
+                    result = await _repository.Insert(new dictionary
+                    {
+                        dictionary_id = Guid.NewGuid(),
+                        dictionary_name = dictionaryName,
+                        user_id = userId,
+                        created_date = DateTime.Now,
+                        last_view_at = null
+                    });
+
+                    if (result && cloneDictionary != null)
+                    {
+                        // TODO
+                    }
+
+                    if (result)
+                    {
+                        transaction.Commit();
+                        res.OnSuccess();
+                    }
+                    else
+                    {
+                        transaction.Rollback();
+                        res.OnError(ErrorCode.Err9999);
+                    }
+                }
+            }
+
+            return res;
         }
         #endregion
 

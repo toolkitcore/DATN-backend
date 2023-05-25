@@ -62,5 +62,26 @@ namespace HUST.Api.Controllers
 
             return res;
         }
+
+        /// <summary>
+        /// Thực hiện thêm 1 từ điển mới (có thể kèm việc copy dữ liệu từ 1 từ điển khác đã có)
+        /// </summary>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        [HttpPost("add_dictionary")]
+        public async Task<IServiceResult> AddDictionary([FromBody] AddDictionaryParam param)
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.AddDictionary(param.DictionaryName, param.CloneDictionaryId);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
     }
 }

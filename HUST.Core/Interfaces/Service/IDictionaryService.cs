@@ -26,7 +26,9 @@ namespace HUST.Core.Interfaces.Service
         /// <summary>
         /// Thêm 1 từ điển mới 
         /// </summary>
+        /// <param name="dictionaryName"></param>
+        /// <param name="cloneDictionaryId"></param>
         /// <returns></returns>
-        Task<IServiceResult> AddDictionary();
+        Task<IServiceResult> AddDictionary(string dictionaryName, string cloneDictionaryId);
     }
 }
