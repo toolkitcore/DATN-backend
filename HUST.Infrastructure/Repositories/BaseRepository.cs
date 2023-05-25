@@ -104,13 +104,13 @@ namespace HUST.Infrastructure.Repositories
         public async Task<bool> Insert(TEntity entity, IDbTransaction dbTransaction)
         {
             var connection = dbTransaction.Connection;
-            var result = await connection.InsertAsync(entity, dbTransaction, ConnectionTimeout);
-            return result > 0;
+            await connection.InsertAsync(entity, dbTransaction, ConnectionTimeout);
+            return true;
         }
         public async Task<bool> Insert(IEnumerable<TEntity> entities, IDbTransaction dbTransaction)
         {
             var connection = dbTransaction.Connection;
-            var result = await connection.InsertAsync(entities, dbTransaction, ConnectionTimeout);
+            var result = await connection.InsertAsync(entities, dbTransaction, ConnectionTimeout); // Cần kiểm nghiệm
             return result > 0;
         }
 
@@ -212,7 +212,7 @@ namespace HUST.Infrastructure.Repositories
                 {
                     using (var conn = await this.CreateConnectionAsync())
                     {
-                        var result = await conn.ExecuteAsync(sql, param, transaction, ConnectionTimeout) > 0;
+                        var result = await conn.ExecuteAsync(sql, param, commandTimeout: ConnectionTimeout) > 0;
                         return result;
                     }
                 }
@@ -259,6 +259,47 @@ namespace HUST.Infrastructure.Repositories
             {
                 return await connection.DeleteAsync(entities, commandTimeout: ConnectionTimeout);
             }
+        }
+
+        public async Task<bool> Delete(Type entityTable, object param, IDbTransaction transaction = null)
+        {
+            var whereList = new List<string>();
+            var parameters = new DynamicParameters();
+
+            foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(param))
+            {
+                whereList.Add($"{property.Name} = @{property.Name}");
+            }
+            parameters.AddDynamicParams(param);
+
+            // Khai báo câu lệnh sql
+            var sqlCommand = $"DELETE FROM {entityTable.Name} WHERE {string.Join(" AND ", whereList)}";
+
+            if (transaction != null)
+            {
+                var result = await transaction.Connection.ExecuteAsync(sqlCommand, param, transaction, ConnectionTimeout) > 0;
+                return result;
+            }
+            else
+            {
+                using (var conn = await this.CreateConnectionAsync())
+                {
+                    var result = await conn.ExecuteAsync(sqlCommand, param, transaction, ConnectionTimeout) > 0;
+                    return result;
+                }
+            }
+
+            return false;
+        }
+
+        public async Task<bool> Delete<T>(object param, IDbTransaction transaction = null)
+        {
+            return await Delete(typeof(T), param, transaction);
+        }
+
+        public async Task<bool> Delete(object param, IDbTransaction transaction = null)
+        {
+            return await Delete(typeof(TEntity), param, transaction);
         }
         #endregion
 

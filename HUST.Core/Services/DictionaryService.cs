@@ -77,7 +77,7 @@ namespace HUST.Core.Services
             var user = this.ServiceCollection.AuthUtil.GetCurrentUser();
             var oldDictionaryId = user.DictionaryId;
 
-            if(string.IsNullOrEmpty(dictionaryId))
+            if (string.IsNullOrEmpty(dictionaryId))
             {
                 return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
             }
@@ -117,7 +117,7 @@ namespace HUST.Core.Services
                     {
                         dictionary_id = dict.DictionaryId,
                         last_view_at = now
-                    });
+                    }, transaction);
 
                     if (result)
                     {
@@ -125,7 +125,7 @@ namespace HUST.Core.Services
                         {
                             dictionary_id = oldDictionaryId,
                             last_view_at = now.AddMinutes(-1) // 1 phút trước
-                        });
+                        }, transaction);
                     }
 
                     if (result)
@@ -151,9 +151,195 @@ namespace HUST.Core.Services
             return res;
         }
 
-        public Task<IServiceResult> AddDictionary()
+        /// <summary>
+        /// Thêm 1 từ điển mới 
+        /// </summary>
+        /// <param name="dictionaryName"></param>
+        /// <param name="cloneDictionaryId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> AddDictionary(string dictionaryName, string cloneDictionaryId)
         {
-            throw new NotImplementedException();
+            var res = new ServiceResult();
+
+            // Kiểm tra tham số
+            if (string.IsNullOrWhiteSpace(dictionaryName))
+            {
+                return res.OnError(ErrorCode.Err9000);
+            }
+
+            // Bỏ khoảng trắng 2 đầu
+            dictionaryName = dictionaryName.Trim();
+
+            var userId = this.ServiceCollection.AuthUtil.GetCurrentUserId();
+
+            // Kiểm tra tên đã được sử dụng chưa
+            var existDictionaryWithSameName = await _repository.SelectObject<Models.DTO.Dictionary>(new Dictionary<string, object>
+            {
+                { nameof(dictionary.user_id), userId },
+                { nameof(dictionary.dictionary_name), dictionaryName }
+            }) as Models.DTO.Dictionary;
+
+            if (existDictionaryWithSameName != null)
+            {
+                return res.OnError(ErrorCode.Err2001, ErrorMessage.Err2001);
+            }
+
+            // Lấy ra từ điển dùng để clone
+            Models.DTO.Dictionary cloneDictionary = null;
+            if (!string.IsNullOrEmpty(cloneDictionaryId))
+            {
+                cloneDictionary = await _repository.SelectObject<Models.DTO.Dictionary>(new Dictionary<string, object>
+                {
+                    { nameof(dictionary.dictionary_id), cloneDictionaryId },
+                    { nameof(dictionary.user_id), userId },
+                }) as Models.DTO.Dictionary;
+            }
+
+
+            if (existDictionaryWithSameName != null)
+            {
+                return res.OnError(ErrorCode.Err2001, ErrorMessage.Err2001);
+            }
+
+            // Transaction thêm từ điển mới: thêm từ điển + clone dữ liệu nếu cần
+            // Exception sẽ không được bắt tại đây (mà bắt ở controller) => không tự động rollback được transaction
+            // => có thể bổ sung try catch để bắt exception rồi rollback
+            // Có thể không dùng transaction: vì insert luôn trả về true, store luôn trả về true
+            var newDictionaryId = Guid.NewGuid();
+            _ = await _repository.Insert(new dictionary
+            {
+                dictionary_id = newDictionaryId,
+                dictionary_name = dictionaryName,
+                user_id = userId,
+                created_date = DateTime.Now,
+                last_view_at = null
+            });
+
+            if (cloneDictionary != null)
+            {
+                _ = await _repository.CloneDictionaryData(cloneDictionary.DictionaryId, newDictionaryId);
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Thực hiện cập nhật tên từ điển
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <param name="dictionaryName"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> UpdateDictionary(string dictionaryId, string dictionaryName)
+        {
+            var res = new ServiceResult();
+
+            // Kiểm tra tham số
+            if (string.IsNullOrWhiteSpace(dictionaryName))
+            {
+                return res.OnError(ErrorCode.Err9000);
+            }
+
+            // Bỏ khoảng trắng 2 đầu
+            dictionaryName = dictionaryName.Trim();
+
+            var userId = this.ServiceCollection.AuthUtil.GetCurrentUserId();
+
+            // Kiểm tra tên đã được sử dụng chưa
+            var existDictionaryWithSameName = await _repository.SelectObject<Models.DTO.Dictionary>(new Dictionary<string, object>
+            {
+                { nameof(dictionary.user_id), userId },
+                { nameof(dictionary.dictionary_name), dictionaryName }
+            }) as Models.DTO.Dictionary;
+
+            if (existDictionaryWithSameName != null)
+            {
+                if (string.Equals(existDictionaryWithSameName.DictionaryId.ToString(), dictionaryId))
+                {
+                    return res.OnSuccess();
+                }
+                return res.OnError(ErrorCode.Err2001, ErrorMessage.Err2001);
+            }
+
+            // Kiểm tra người dùng có dictionary này không
+            // Vì có thể dictionaryId tồn tại, nhưng không phải của user này
+            var dict = await _repository.SelectObject<Models.DTO.Dictionary>(new Dictionary<string, object>
+            {
+                { nameof(dictionary.user_id), userId },
+                { nameof(dictionary.dictionary_id), dictionaryId }
+            }) as Models.DTO.Dictionary;
+            if (dict == null)
+            {
+                return res.OnError(ErrorCode.Err2000, ErrorMessage.Err2000);
+            }
+
+            // Cập nhật tên từ điển
+            var result = await _repository.Update(new
+            {
+                dictionary_id = dictionaryId,
+                dictionary_name = dictionaryName,
+                modified_date = DateTime.Now
+            });
+
+            if (result)
+            {
+                return res.OnSuccess();
+            }
+            else
+            {
+                return res.OnError(ErrorCode.Err9999);
+            }
+        }
+
+        /// <summary>
+        /// Thực hiện xóa từ điển
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> DeleteDictionary(string dictionaryId)
+        {
+            var res = new ServiceResult();
+            var currentUserId = this.ServiceCollection.AuthUtil.GetCurrentUserId();
+            var currentDictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId();
+
+            var lstDictionary = (await _repository.SelectObjects<Models.DTO.Dictionary>(new Dictionary<string, object>()
+            {
+                { nameof(dictionary.user_id), currentUserId}
+            }))?.ToList();
+
+            // Nếu không có bất cứ từ điển nào
+            if(lstDictionary == null || lstDictionary.Count == 0)
+            {
+                return res.OnError(ErrorCode.Err9999);
+            }
+
+            // Kiểm tra người dùng có sở hữu từ điển này không
+            var dictionaryItem = lstDictionary.Find(x => string.Equals(dictionaryId, x.DictionaryId.ToString()));
+            if(dictionaryItem == null)
+            {
+                return res.OnError(ErrorCode.Err2000, ErrorMessage.Err2000);
+            }
+
+            // Kiểm tra từ điển có đang sử dụng hay không
+            var isDictionaryInUse = string.Equals(dictionaryId, currentDictionaryId)
+                || (lstDictionary.Count == 1 && string.Equals(dictionaryId, lstDictionary[0].DictionaryId.ToString())); // chú ý ToString
+            if (isDictionaryInUse)
+            {
+                return res.OnError(ErrorCode.Err2002, ErrorMessage.Err2002);
+            }
+
+            var result = await _repository.Delete(new
+            {
+                dictionary_id = dictionaryItem.DictionaryId,
+                user_id = currentUserId
+            });
+
+            if(result)
+            {
+                return res.OnSuccess();
+            } else
+            {
+                return res.OnError(ErrorCode.Err9999);
+            }
         }
         #endregion
 

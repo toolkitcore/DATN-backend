@@ -26,7 +26,24 @@ namespace HUST.Core.Interfaces.Service
         /// <summary>
         /// Thêm 1 từ điển mới 
         /// </summary>
+        /// <param name="dictionaryName"></param>
+        /// <param name="cloneDictionaryId"></param>
         /// <returns></returns>
-        Task<IServiceResult> AddDictionary();
+        Task<IServiceResult> AddDictionary(string dictionaryName, string cloneDictionaryId);
+
+        /// <summary>
+        /// Thực hiện cập nhật tên từ điển
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <param name="dictionaryName"></param>
+        /// <returns></returns>
+        Task<IServiceResult> UpdateDictionary(string dictionaryId, string dictionaryName);
+
+        /// <summary>
+        /// Thực hiện xóa từ điển
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        Task<IServiceResult> DeleteDictionary(string dictionaryId);
     }
 }

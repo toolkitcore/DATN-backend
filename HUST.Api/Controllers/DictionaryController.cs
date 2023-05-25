@@ -62,5 +62,71 @@ namespace HUST.Api.Controllers
 
             return res;
         }
+
+        /// <summary>
+        /// Thực hiện thêm 1 từ điển mới (có thể kèm việc copy dữ liệu từ 1 từ điển khác đã có)
+        /// </summary>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        [HttpPost("add_dictionary")]
+        public async Task<IServiceResult> AddDictionary([FromBody] AddDictionaryParam param)
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.AddDictionary(param.DictionaryName, param.CloneDictionaryId);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Thực hiện cập nhật tên từ điển
+        /// </summary>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        [HttpPatch("update_dictionary")]
+        public async Task<IServiceResult> UpdateDictionary([FromBody] Core.Models.DTO.Dictionary param)
+        {
+            // param.DictionaryId null thì sẽ có exception của .NET => lỗi 400
+
+
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.UpdateDictionary(param.DictionaryId.ToString(), param.DictionaryName);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Thực hiện xóa từ điển
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        [HttpDelete("delete_dictionary")]
+        public async Task<IServiceResult> DeleteDictionary([FromQuery] string dictionaryId)
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.DeleteDictionary(dictionaryId);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
     }
 }

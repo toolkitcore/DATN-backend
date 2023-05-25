@@ -31,7 +31,7 @@ namespace HUST.Infrastructure.Repositories
                 var parameters = new DynamicParameters();
                 parameters.Add("$UserId", userId);
                 var res = await connection.ExecuteAsync(
-                    sql: $"Proc_CreateActivatedAccountData",
+                    sql: $"Proc_Account_CreateActivatedAccountData",
                     param: parameters,
                     commandType: CommandType.StoredProcedure,
                     commandTimeout: ConnectionTimeout);
