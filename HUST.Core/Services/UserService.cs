@@ -104,21 +104,6 @@ namespace HUST.Core.Services
         public async Task<IServiceResult> UpdateUserInfo(UpdateUserInfoParam param)
         {
             var res = new ServiceResult();
-            // TODO: Xem xét giá trị Birthday có đúng không, có bị lệch ngày giờ không
-            // Upload ảnh đại diện
-            string avatarLink = null;
-            if(param.Avatar != null)
-            {
-                if (param.Avatar.Length > 0)
-                {
-                    using (var ms = new MemoryStream())
-                    {
-                        param.Avatar.CopyTo(ms);
-                        var fileBytes = ms.ToArray();
-                        avatarLink = await _storage.UploadFileAsync("avatar", Guid.NewGuid() + ".png", fileBytes);
-                    }
-                }
-            }
 
             // Cập nhật thông tin user
             var userId = this.ServiceCollection.AuthUtil.GetCurrentUserId();
@@ -130,6 +115,39 @@ namespace HUST.Core.Services
             if(user == null)
             {
                 return res.OnError(ErrorCode.Err9999);
+            }
+
+            // TODO: Xem xét giá trị Birthday có đúng không, có bị lệch ngày giờ không
+
+            // Upload ảnh đại diện
+            string avatarLink = null;
+            if (param.Avatar != null)
+            {
+                if (!FunctionUtil.IsImageFile(param.Avatar))
+                {
+                    return res.OnError(ErrorCode.Err9003, ErrorMessage.Err9003);
+                }
+
+                if (!FunctionUtil.IsValidFileSize(param.Avatar))
+                {
+                    return res.OnError(ErrorCode.Err9002, ErrorMessage.Err9002);
+                }
+
+                if (param.Avatar.Length > 0)
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        param.Avatar.CopyTo(ms);
+                        var fileBytes = ms.ToArray();
+
+                        // Để bảo mật hơn thì dùng Guid.NewGuid().ToString()
+                        // Để tiện hơn thì dùng luôn user id (đè lại, không cần xóa ảnh cũ)
+                        avatarLink = await _storage.UploadAsync(StoragePath.Avatar, userId.ToString(), fileBytes);
+                    }
+
+                    // Xóa ảnh cũ
+                    //_ = await _storage.DeleteAsync(StoragePath.Avatar, fileName);
+                }
             }
 
             var result = await _repository.Update(new 
