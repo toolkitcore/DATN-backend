@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using HUST.Core.Interfaces.Repository;
 using HUST.Core.Models.Entity;
+using HUST.Core.Models.ServerObject;
 using HUST.Core.Utils;
 using System;
 using System.Data;
@@ -130,7 +131,7 @@ namespace HUST.Infrastructure.Repositories
         /// </summary>
         /// <param name="dictionaryId"></param>
         /// <returns></returns>
-        public async Task<object> GetNumberRecord(Guid dictionaryId)
+        public async Task<DictionaryNumberRecord> GetNumberRecord(Guid dictionaryId)
         {
             var parameters = new DynamicParameters();
             parameters.Add("$DictionaryId", dictionaryId);
@@ -149,7 +150,7 @@ namespace HUST.Infrastructure.Repositories
             }
 
             // Trả về kết quả filter
-            return new
+            return new DictionaryNumberRecord
             {
                 NumberConcept = parameters.Get<int?>("$NumberConcept"),
                 NumberExample = parameters.Get<int?>("$NumberExample"),

@@ -1,5 +1,6 @@
 ﻿using HUST.Core.Models.DTO;
 using HUST.Core.Models.Entity;
+using HUST.Core.Models.ServerObject;
 using System;
 using System.Data;
 using System.Threading.Tasks;
@@ -39,6 +40,6 @@ namespace HUST.Core.Interfaces.Repository
         /// </summary>
         /// <param name="dictionaryId"></param>
         /// <returns></returns>
-        Task<object> GetNumberRecord(Guid dictionaryId);
+        Task<DictionaryNumberRecord> GetNumberRecord(Guid dictionaryId);
     }
 }

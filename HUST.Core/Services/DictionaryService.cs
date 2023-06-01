@@ -389,9 +389,16 @@ namespace HUST.Core.Services
         {
             var res = new ServiceResult();
 
-            if (!string.IsNullOrEmpty(sourceDictionaryId) || !string.IsNullOrEmpty(destDictionaryId))
+            if (string.IsNullOrEmpty(sourceDictionaryId) || string.IsNullOrEmpty(destDictionaryId))
             {
                 return res.OnError(ErrorCode.Err9999);
+            }
+
+            // Kiểm tra số lượng bản ghi trong từ điển nguồn
+            var srcRecords = await _repository.GetNumberRecord(Guid.Parse(sourceDictionaryId));
+            if((srcRecords.NumberConcept ?? 0) == 0 && (srcRecords.NumberExample ?? 0) == 0)
+            {
+                return res.OnError(ErrorCode.Err2003, ErrorMessage.Err2003);
             }
 
             _ = await _repository.TransferDictionaryData(
