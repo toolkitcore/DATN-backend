@@ -1,6 +1,8 @@
 ﻿using HUST.Core.Models.DTO;
 using HUST.Core.Models.Param;
 using HUST.Core.Models.ServerObject;
+using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Threading.Tasks;
 
 namespace HUST.Core.Interfaces.Service
@@ -45,5 +47,35 @@ namespace HUST.Core.Interfaces.Service
         /// <param name="dictionaryId"></param>
         /// <returns></returns>
         Task<IServiceResult> DeleteDictionary(string dictionaryId);
+
+        /// <summary>
+        /// Thực hiện xóa dữ liệu từ điển
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        Task<IServiceResult> DeleteDictionaryData(string dictionaryId);
+
+        /// <summary>
+        /// Thực hiện copy dữ liệu từ từ điển nguồn và gộp vào dữ liệu ở từ điển đích
+        /// </summary>
+        /// <param name="sourceDictionaryId"></param>
+        /// <param name="destDictionaryId"></param>
+        /// <param name="isDeleteData"></param>
+        /// <returns></returns>
+        Task<IServiceResult> TransferDictionary(string sourceDictionaryId, string destDictionaryId, bool? isDeleteData);
+
+        /// <summary>
+        /// Lấy số lượng concept, example trong 1 từ điển
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        Task<IServiceResult> GetNumberRecord(Guid dictionaryId);
+
+        /// <summary>
+        /// Lấy template nhập khẩu
+        /// </summary>
+        /// <returns></returns>
+        Task<byte[]> DowloadTemplateImportDictionary();
+
     }
 }

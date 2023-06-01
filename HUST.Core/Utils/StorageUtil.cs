@@ -51,11 +51,11 @@ namespace HUST.Core.Utils
         /// <summary>
         /// Upload file
         /// </summary>
-        /// <param name="folder"></param>
+        /// <param name="folderPath"></param>
         /// <param name="fileName"></param>
         /// <param name="file"></param>
         /// <returns></returns>
-        public async Task<string> UploadFileAsync(string folder, string fileName, byte[] file)
+        public async Task<string> UploadAsync(string folderPath, string fileName, byte[] file)
         {
             var stream = new MemoryStream(file);
             var token = await GetFirebaseToken();
@@ -68,7 +68,7 @@ namespace HUST.Core.Utils
                     ThrowOnCancel = true
                 })
                 .Child(_environment.EnvironmentName)
-                .Child(folder)
+                .Child(folderPath)
                 .Child(fileName)
                 .PutAsync(stream, cancellation.Token);
 
@@ -77,6 +77,61 @@ namespace HUST.Core.Utils
 
             var downloadUrl = await task;
             return downloadUrl;
+        }
+
+        /// <summary>
+        /// Get file url
+        /// </summary>
+        /// <param name="folderPath"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public async Task<string> GetDownloadUrlAsync(string folderPath, string fileName)
+        {
+            var token = await GetFirebaseToken();
+            var task = new FirebaseStorage(
+                Storage,
+                new FirebaseStorageOptions
+                {
+                    AuthTokenAsyncFactory = () => Task.FromResult(token),
+                    ThrowOnCancel = true
+                })
+                .Child(_environment.EnvironmentName)
+                .Child(folderPath)
+                .Child(fileName)
+                .GetDownloadUrlAsync();
+
+            // Track progress of the upload
+            //task.Progress.ProgressChanged += (s, e) => Console.WriteLine($"Progress: {e.Percentage} %");
+
+            var downloadUrl = await task;
+            return downloadUrl;
+        }
+
+        /// <summary>
+        /// Xóa file
+        /// </summary>
+        /// <param name="folderPath"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public async Task<bool> DeleteAsync(string folderPath, string fileName)
+        {
+            var token = await GetFirebaseToken();
+            var task = new FirebaseStorage(
+                Storage,
+                new FirebaseStorageOptions
+                {
+                    AuthTokenAsyncFactory = () => Task.FromResult(token),
+                    ThrowOnCancel = true
+                })
+                .Child(_environment.EnvironmentName)
+                .Child(folderPath)
+                .Child(fileName)
+                .DeleteAsync();
+
+            // Track progress of the upload
+            //task.Progress.ProgressChanged += (s, e) => Console.WriteLine($"Progress: {e.Percentage} %");
+            await task;
+            return true;
         }
 
     }
