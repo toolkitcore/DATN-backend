@@ -191,13 +191,14 @@ namespace HUST.Core.Utils
         }
 
         /// <summary>
-        /// Kiểm tra kích thước file < 3MB
+        /// Kiểm tra kích thước file
         /// </summary>
         /// <param name="file"></param>
+        /// <param name="maxFileSize">Kích thước file tối đa - MB</param>
         /// <returns></returns>
-        public static bool IsValidFileSize(IFormFile file)
+        public static bool IsValidFileSize(IFormFile file, double maxFileSize = 3)
         {
-            if(file != null && file.Length < 1024*1024*3)
+            if(file != null && file.Length < 1024*1024* maxFileSize)
             {
                 return true;
             }
