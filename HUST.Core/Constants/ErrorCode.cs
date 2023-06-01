@@ -103,6 +103,16 @@ namespace HUST.Core.Constants
         public const int Err9001 = 9001;
 
         /// <summary>
+        /// This file is too large
+        /// </summary>
+        public const int Err9002 = 9002;
+
+        /// <summary>
+        /// This file type is not supported
+        /// </summary>
+        public const int Err9003 = 9003;
+
+        /// <summary>
         /// General error
         /// </summary>
         public const int Err9999 = 9999;
@@ -136,7 +146,8 @@ namespace HUST.Core.Constants
 
         public const string Err9000 = "Invalid parameters";
         public const string Err9001 = "Invalid file upload";
-
+        public const string Err9002 = "This file is too large";
+        public const string Err9003 = "This file type is not supported";
 
     }
 }

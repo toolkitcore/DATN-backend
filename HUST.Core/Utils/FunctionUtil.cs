@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using HUST.Core.Constants;
 using System.Net.Http;
+using Microsoft.AspNetCore.Http;
 
 namespace HUST.Core.Utils
 {
@@ -189,5 +190,33 @@ namespace HUST.Core.Utils
             return prop;
         }
 
+        /// <summary>
+        /// Kiểm tra kích thước file
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="maxFileSize">Kích thước file tối đa - MB</param>
+        /// <returns></returns>
+        public static bool IsValidFileSize(IFormFile file, double maxFileSize = 3)
+        {
+            if(file != null && file.Length < 1024*1024* maxFileSize)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Kiểm tra loại file có phải ảnh hay không
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public static bool IsImageFile(IFormFile file)
+        {
+            if (file != null && FileContentType.Image.Contains(file.ContentType))
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }

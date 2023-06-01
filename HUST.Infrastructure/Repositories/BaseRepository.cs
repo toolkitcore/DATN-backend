@@ -280,16 +280,12 @@ namespace HUST.Infrastructure.Repositories
                 var result = await transaction.Connection.ExecuteAsync(sqlCommand, param, transaction, ConnectionTimeout) > 0;
                 return result;
             }
-            else
-            {
-                using (var conn = await this.CreateConnectionAsync())
-                {
-                    var result = await conn.ExecuteAsync(sqlCommand, param, transaction, ConnectionTimeout) > 0;
-                    return result;
-                }
-            }
 
-            return false;
+            using (var conn = await this.CreateConnectionAsync())
+            {
+                var result = await conn.ExecuteAsync(sqlCommand, param, transaction, ConnectionTimeout) > 0;
+                return result;
+            }
         }
 
         public async Task<bool> Delete<T>(object param, IDbTransaction transaction = null)
@@ -539,7 +535,10 @@ namespace HUST.Infrastructure.Repositories
                     var res = new Dictionary<string, object>();
                     foreach (var table in tableNames)
                     {
-                        res.Add(table, await queryResult.ReadAsync());
+                        var data = await queryResult.ReadAsync();
+                        var dataCast = SerializeUtil.DeserializeObject(SerializeUtil.SerializeObject(data),
+                        typeof(List<>).MakeGenericType(FunctionUtil.GetModelType(table)));
+                        res.Add(table, dataCast);
                     }
 
                     return res;
