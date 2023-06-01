@@ -3,6 +3,7 @@ using HUST.Core.Enums;
 using HUST.Core.Interfaces.Repository;
 using HUST.Core.Interfaces.Service;
 using HUST.Core.Models.DTO;
+using HUST.Core.Models.Entity;
 using HUST.Core.Models.ServerObject;
 using HUST.Core.Utils;
 using Microsoft.AspNetCore.Http;
@@ -35,41 +36,182 @@ namespace HUST.Core.Services
             _repository = repository;
         }
 
-        
+
 
         #endregion
 
         #region Method
-       
 
-        public Task<ServiceResult> Delete(Guid entityId)
+        /// <summary>
+        /// Lấy danh sách concept trong từ điển
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetListConcept(string dictionaryId)
         {
-            throw new NotImplementedException();
+            var res = new ServiceResult();
+
+            if (string.IsNullOrEmpty(dictionaryId))
+            {
+                dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId()?.ToString();
+            }
+
+            var lstConcept = await _repository.SelectObjects<Concept>(new Dictionary<string, object>
+            {
+                { nameof(concept.dictionary_id), dictionaryId }
+            }) as List<Concept>;
+
+            res.Data = new
+            {
+                ListConcept = lstConcept?.OrderBy(x => x.Title),
+                LastUpdatedAt = DateTime.Now
+            };
+
+            return res;
         }
 
-        public Task<ServiceResult> DeleteMany(List<Guid> entityIds)
+        /// <summary>
+        /// Thêm 1 concept vào từ điển
+        /// </summary>
+        /// <param name="concept"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> AddConcept(Concept concept)
         {
-            throw new NotImplementedException();
+            var res = new ServiceResult();
+
+            if (concept == null || string.IsNullOrWhiteSpace(concept.Title))
+            {
+                return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+            }
+
+            if (concept.DictionaryId == null || concept.DictionaryId == Guid.Empty)
+            {
+                concept.DictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId();
+            }
+
+            concept.Title = concept.Title.Trim();
+            concept.Description = concept.Description?.Trim();
+
+            // Kiểm tra concept đã tồn tại trong từ điển
+            var existConcept = await _repository.SelectObject<Concept>(new Dictionary<string, object>
+            {
+                { nameof(Models.Entity.concept.dictionary_id), concept.DictionaryId },
+                { nameof(Models.Entity.concept.title), concept.Title }
+            }) as Concept;
+
+            if (existConcept != null)
+            {
+                return res.OnError(ErrorCode.Err3001, ErrorMessage.Err3001);
+            }
+
+            _ = await _repository.Insert(new concept
+            {
+                concept_id = Guid.NewGuid(),
+                dictionary_id = concept.DictionaryId,
+                title = concept.Title,
+                description = concept.Description,
+                created_date = DateTime.Now
+            });
+
+            return res;
         }
 
-        public Task<ServiceResult> GetAll()
+        /// <summary>
+        /// Thực hiện cập nhật tên, mô tả của concept
+        /// </summary>
+        /// <param name="concept"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> UpdateConcept(Concept concept)
         {
-            throw new NotImplementedException();
+            var res = new ServiceResult();
+
+            if (concept == null || concept.ConceptId == Guid.Empty || string.IsNullOrWhiteSpace(concept.Title))
+            {
+                return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+            }
+            concept.Title = concept.Title.Trim();
+            concept.Description = concept.Description?.Trim();
+
+            // Lấy ra bản ghi đã lưu trong db
+            var savedConcept = await _repository.SelectObject<Concept>(new Dictionary<string, object>
+            {
+                { nameof(Models.Entity.concept.concept_id), concept.ConceptId },
+            }) as Concept;
+
+            if (savedConcept == null)
+            {
+                return res.OnError(ErrorCode.Err3005, ErrorMessage.Err3005);
+            }
+
+            if (concept.Title != savedConcept.Title)
+            {
+                // Kiểm tra concept đã tồn tại trong từ điển
+                var existConcept = await _repository.SelectObject<Concept>(new Dictionary<string, object>
+                {
+                    { nameof(Models.Entity.concept.dictionary_id), savedConcept.DictionaryId },
+                    { nameof(Models.Entity.concept.title), concept.Title }
+                }) as Concept;
+
+                if (existConcept != null)
+                {
+                    return res.OnError(ErrorCode.Err3001, ErrorMessage.Err3001);
+                }
+            }
+
+            // Cập nhật
+            var result = await _repository.Update(new
+            {
+                concept_id = concept.ConceptId,
+                title = concept.Title,
+                description = concept.Description,
+                modified_date = DateTime.Now
+            });
+
+            if(!result)
+            {
+                return res.OnError(ErrorCode.Err9999);
+            }
+
+            return res;
         }
 
-        public Task<ServiceResult> GetById(Guid entityId)
+        /// <summary>
+        /// Thực hiện xóa concept
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> DeleteConcept(string conceptId)
         {
-            throw new NotImplementedException();
-        }
+            var res = new ServiceResult();
 
-        public Task<ServiceResult> Insert(Concept entity)
-        {
-            throw new NotImplementedException();
-        }
+            if(string.IsNullOrEmpty(conceptId))
+            {
+                return res.OnError(ErrorCode.Err9999);
+            }
 
-        public Task<ServiceResult> Update(Guid entityId, Concept entity)
-        {
-            throw new NotImplementedException();
+            // Kiểm tra concept có liên kết với example hay không
+            var linkedExample = await _repository.SelectObjects<ExampleRelationship>(new
+            {
+                concept_id = conceptId
+            }) as List<ExampleRelationship>;
+
+            if(linkedExample != null && linkedExample.Count > 0)
+            {
+                return res.OnError(ErrorCode.Err3002, ErrorMessage.Err3002, data: linkedExample.Count);
+            }
+
+            // Thực hiện xóa concept
+            var result = await _repository.Delete(new
+            {
+                concept_id = conceptId
+            });
+
+            if(!result)
+            {
+                return res.OnError(ErrorCode.Err3005, ErrorMessage.Err3005);
+            }
+
+            return res;
         }
 
         public async Task<ServiceResult> GetListRecommendConcept(List<string> keywords, Guid dictionaryId)
@@ -84,13 +226,13 @@ namespace HUST.Core.Services
 
 
             var data = (from r in conceptRelationshipData
-                       join c1 in conceptData on r.ConceptId equals c1.ConceptId
-                       join c2 in conceptData on r.ParentId equals c2.ConceptId
-                       select new
-                       {
-                           Concept1 = c1.Title,
-                           Concept2 = c2.Title
-                       }).ToList();
+                        join c1 in conceptData on r.ConceptId equals c1.ConceptId
+                        join c2 in conceptData on r.ParentId equals c2.ConceptId
+                        select new
+                        {
+                            Concept1 = c1.Title,
+                            Concept2 = c2.Title
+                        }).ToList();
 
             var lstConcept = new List<string>();
             var deepLevel = 1;
@@ -152,16 +294,16 @@ namespace HUST.Core.Services
             }
 
             var n = lstConcept.Count;
-            int[,] linkStrengthArr = new int[n,n];
-            for(var i = 0; i < n; ++i)
+            int[,] linkStrengthArr = new int[n, n];
+            for (var i = 0; i < n; ++i)
             {
-                for(var j = 0; j <= i; ++j)
+                for (var j = 0; j <= i; ++j)
                 {
-                    if(i == j)
+                    if (i == j)
                     {
-                        linkStrengthArr[i,j] = LinkStrength.Itself;
+                        linkStrengthArr[i, j] = LinkStrength.Itself;
                         continue;
-                    } 
+                    }
 
                     if (isPrimary(lstConcept[i]) && isPrimary(lstConcept[j]))
                     {
@@ -201,7 +343,7 @@ namespace HUST.Core.Services
 
             var lstActivateScore = Run(n, linkStrengthArr);
             var myDict = new Dictionary<string, decimal>();
-            for(var i = 0; i < n; ++i)
+            for (var i = 0; i < n; ++i)
             {
                 myDict.Add(lstConcept[i], lstActivateScore[i]);
             }
@@ -219,7 +361,8 @@ namespace HUST.Core.Services
             decimal threshold = 0.01M;
             int n = 300;
 
-            bool Stop (List<decimal> arr1, List<decimal> arr2) {
+            bool Stop(List<decimal> arr1, List<decimal> arr2)
+            {
                 for (var i = 0; i < arr1.Count; ++i)
                 {
                     if (Math.Abs(arr1[i] - arr2[i]) > threshold)
