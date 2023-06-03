@@ -51,6 +51,7 @@ namespace HUST.Api
             services.AddScoped<IAuditLogRepository, AuditLogRepository>();
             services.AddScoped<IDictionaryRepository, DictionaryRepository>();
             services.AddScoped<IConceptRepository, ConceptRepository>();
+            services.AddScoped<IConceptRelationshipRepository, ConceptRelationshipRepository>();
 
         }
 

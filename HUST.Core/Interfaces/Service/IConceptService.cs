@@ -1,4 +1,5 @@
 ﻿using HUST.Core.Models.DTO;
+using HUST.Core.Models.Param;
 using HUST.Core.Models.ServerObject;
 using System;
 using System.Collections.Generic;
@@ -56,6 +57,27 @@ namespace HUST.Core.Interfaces.Service
         /// <returns></returns>
         Task<IServiceResult> SearchConcept(string searchKey, string dictionaryId, bool? isSearchSoundex);
 
-        Task<ServiceResult> GetListRecommendConcept(List<string> keywords, Guid dictionaryId);
+        /// <summary>
+        /// Lấy ra mối quan hệ liên kết giữa concept con và concept cha.
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <param name="parentId"></param>
+        /// <returns></returns>
+        Task<IServiceResult> GetConceptRelationship(string conceptId, string parentId);
+
+        /// <summary>
+        /// Thực hiện cập nhật (hoặc tạo mới nếu chưa có) liên kết giữa 2 concept
+        /// </summary>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        Task<IServiceResult> UpdateConceptRelationship(UpdateConceptRelationshipParam param);
+
+        /// <summary>
+        /// Thực hiện lấy danh sách gợi ý concept từ những từ khóa người dùng cung cấp.
+        /// </summary>
+        /// <param name="keywords"></param>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        Task<ServiceResult> GetListRecommendConcept(List<string> keywords, Guid? dictionaryId);
     }
 }

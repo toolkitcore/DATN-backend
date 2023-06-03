@@ -4,6 +4,7 @@ using HUST.Core.Interfaces.Repository;
 using HUST.Core.Interfaces.Service;
 using HUST.Core.Models.DTO;
 using HUST.Core.Models.Entity;
+using HUST.Core.Models.Param;
 using HUST.Core.Models.ServerObject;
 using HUST.Core.Utils;
 using Microsoft.AspNetCore.Http;
@@ -25,15 +26,19 @@ namespace HUST.Core.Services
         #region Field
 
         private readonly IConceptRepository _repository;
+        private readonly IConceptRelationshipRepository _conceptRelRepository;
+
 
         #endregion
 
         #region Constructor
 
         public ConceptService(IConceptRepository repository,
+            IConceptRelationshipRepository conceptRelRepository,
             IHustServiceCollection serviceCollection) : base(serviceCollection)
         {
             _repository = repository;
+            _conceptRelRepository = conceptRelRepository;
         }
 
 
@@ -302,12 +307,180 @@ namespace HUST.Core.Services
             return res;
         }
 
-        public async Task<ServiceResult> GetListRecommendConcept(List<string> keywords, Guid dictionaryId)
+        /// <summary>
+        /// Lấy ra mối quan hệ liên kết giữa concept con và concept cha.
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <param name="parentId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetConceptRelationship(string conceptId, string parentId)
         {
             var res = new ServiceResult();
 
+            if(string.IsNullOrEmpty(conceptId) || string.IsNullOrEmpty(parentId))
+            {
+                return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+            }
 
-            //var dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId();
+            var relation = await _repository.SelectObject<ViewConceptRelationship>(new Dictionary<string, object>
+            {
+                { nameof(view_concept_relationship.child_id), conceptId },
+                { nameof(view_concept_relationship.parent_id), parentId },
+            }) as ViewConceptRelationship;
+
+            if(relation != null)
+            {
+                res.Data = new
+                {
+                    relation.ConceptLinkId,
+                    relation.ConceptLinkName
+                };
+            } else
+            {
+                res.Data = new
+                {
+                    ConceptLinkId = Guid.Empty,
+                    ConceptLinkName = "No link"
+                };
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// Thực hiện cập nhật (hoặc tạo mới nếu chưa có) liên kết giữa 2 concept
+        /// </summary>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> UpdateConceptRelationship(UpdateConceptRelationshipParam param)
+        {
+            var res = new ServiceResult();
+            if(param == null || param.ConceptId == Guid.Empty || param.ParentId == Guid.Empty)
+            {
+                return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+            }
+
+            if (param.ConceptId == param.ParentId)
+            {
+                return res.OnError(ErrorCode.Err3003, ErrorMessage.Err3003);
+            }
+
+            // TODO: Có cần kiểm soát chặt việc: id 2 concept cần cùng 1 dictionary, id conceptlink phải cùng user với concept?
+            // Tạm thời => chỉ update được của dictionary đang đăng nhập
+            //var userId = this.ServiceCollection.AuthUtil.GetCurrentUserId();
+            var dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId();
+
+            // Lấy dữ liệu (song song)
+            var taskChildConcept = _repository.SelectObject<Concept>(new
+            {
+                concept_id = param.ConceptId,
+                dictionary_id = dictionaryId
+            });
+
+            var taskParentConcept = _repository.SelectObject<Concept>(new
+            {
+                concept_id = param.ParentId,
+                dictionary_id = dictionaryId
+            });
+
+            var taskLinkChildToParent = _repository.SelectObject<ConceptRelationship>(new
+            {
+                concept_id = param.ConceptId,
+                parent_id = param.ParentId
+            });
+
+            var taskLinkParentToChild = _repository.SelectObject<ConceptRelationship>(new
+            {
+                concept_id = param.ParentId,
+                parent_id = param.ConceptId
+            });
+
+            await Task.WhenAll(taskChildConcept, taskParentConcept, taskLinkChildToParent, taskLinkParentToChild);
+
+            var childConcept = taskChildConcept.Result as Concept;
+            var parentConcept = taskParentConcept.Result as Concept;
+            var linkChildToParent = taskLinkChildToParent.Result as ConceptRelationship;
+            var linkParentToChild = taskLinkParentToChild.Result as ConceptRelationship;
+
+            // Kiểm tra các trường hợp
+            if(childConcept == null || parentConcept == null)
+            {
+                return res.OnError(ErrorCode.Err3005, ErrorMessage.Err3005);
+            }
+
+            if(param.ConceptLinkId == null || param.ConceptLinkId == Guid.Empty)
+            {
+                // TH1: Liên kết = "No link" <=> Xóa bỏ liên kết nếu có.
+                // Có hay không có liên kết parent -> child đều xử lý như nhau, do sẽ không tạo circle link.
+
+                if(linkChildToParent != null)
+                {
+                    _ = await _conceptRelRepository.Delete(new
+                    {
+                        dictionary_id = dictionaryId,
+                        concept_id = param.ConceptId,
+                        parent_id = param.ParentId
+                    });
+                }
+            } 
+            else
+            {
+                // TH2: Liên kết khác "No link"
+
+                // Nếu có liên kết parent -> child và không cưỡng chế cập nhật => lỗi circle link
+                if(linkParentToChild != null)
+                {
+                    if(param.IsForced != true)
+                    {
+                        return res.OnError(ErrorCode.Err3004, ErrorMessage.Err3004);
+                    }
+                    _ = await _conceptRelRepository.Delete(new
+                    {
+                        dictionary_id = dictionaryId,
+                        concept_id = param.ParentId,
+                        parent_id = param.ConceptId
+                    });
+                }
+
+                if(linkChildToParent == null) // nếu có parent -> child thì chắc chắn child -> parent hiện tại đang = null => rơi vào TH này
+                {
+                    _ = await _conceptRelRepository.Insert(new concept_relationship
+                    {
+                        dictionary_id = dictionaryId,
+                        concept_id = param.ConceptId,
+                        parent_id = param.ParentId,
+                        concept_link_id = param.ConceptLinkId,
+                        created_date = DateTime.Now
+                    });
+                } 
+                else if (linkChildToParent.ConceptLinkId != param.ConceptLinkId)
+                {
+                    _ = await _conceptRelRepository.Update(new 
+                    {
+                        concept_relationship_id = linkChildToParent.ConceptRelationshipId,
+                        concept_link_id = param.ConceptLinkId,
+                        modified_date = DateTime.Now
+                    });
+                }
+            }
+
+
+            return res;
+        }
+
+        /// <summary>
+        /// Thực hiện lấy danh sách gợi ý concept từ những từ khóa người dùng cung cấp
+        /// </summary>
+        /// <param name="keywords"></param>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        public async Task<ServiceResult> GetListRecommendConcept(List<string> keywords, Guid? dictionaryId)
+        {
+            var res = new ServiceResult();
+
+            if(dictionaryId == null || dictionaryId == Guid.Empty)
+            {
+                dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId();
+            }
 
             var conceptData = await _repository.SelectObjects<Concept>(new { dictionary_id = dictionaryId }) as List<Concept>;
             var conceptRelationshipData = await _repository.SelectObjects<ConceptRelationship>(new { dictionary_id = dictionaryId }) as List<ConceptRelationship>;
@@ -443,7 +616,12 @@ namespace HUST.Core.Services
 
 
         #region Helper
-
+        /// <summary>
+        /// Hàm chạy giải thuật heuristic tìm giá trị activate của nút trong mạng
+        /// </summary>
+        /// <param name="size"></param>
+        /// <param name="linkStrengthArr"></param>
+        /// <returns></returns>
         public List<decimal> Run(int size, int[,] linkStrengthArr)
         {
             decimal threshold = 0.01M;
