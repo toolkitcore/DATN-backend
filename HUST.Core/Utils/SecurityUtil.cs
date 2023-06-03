@@ -60,7 +60,7 @@ namespace HUST.Core.Utils
                         //new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
                         new Claim(JwtClaimKey.UserId, user.UserId.ToString()),
                         new Claim(JwtClaimKey.UserName, user.UserName ?? ""),
-                        //new Claim(JwtClaimKey.Email, user.Email ?? ""),
+                        new Claim(JwtClaimKey.Email, user.Email ?? ""),
                         //new Claim(JwtClaimKey.Status, ((int)user.Status).ToString()),
                         new Claim(JwtClaimKey.DictionaryId, user.DictionaryId?.ToString() ?? ""),
                      }),

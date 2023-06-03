@@ -104,14 +104,7 @@ namespace HUST.Api.Controllers
                 }
 
                 // Tạo tên file
-                var normalizedDictName = dict.DictionaryName.Replace(' ', '_');
-                if(normalizedDictName.Length > 20)
-                {
-                    normalizedDictName = normalizedDictName.Substring(0, 20);
-                }
-                var fileName = string.Format(TemplateConfig.FileDefaultName.ExportFile, 
-                    normalizedDictName, 
-                    DateTime.Now.ToString("yyyyMMdd'T'HHmmss"));
+                var fileName = _service.GetExportFileName(dict.DictionaryName);
                 return File(fileBytes, FileContentType.OctetStream, fileName);
             }
             catch (Exception ex)
@@ -119,6 +112,28 @@ namespace HUST.Api.Controllers
                 this.ServiceCollection.HandleControllerException(res, ex);
                 return StatusCode((int)HttpStatusCode.InternalServerError, res);
             }
+        }
+
+        /// <summary>
+        /// Backup data và gửi vào email
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        [HttpGet("backup")]
+        public async Task<IServiceResult> BackupData([FromQuery] string email, string dictionaryId)
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.BackupData(email, dictionaryId);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
         }
     }
 }

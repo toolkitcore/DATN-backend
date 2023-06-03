@@ -4,6 +4,7 @@ using HUST.Core.Settings;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using System;
@@ -101,6 +102,31 @@ namespace HUST.Core.Services
                 ToEmail = toEmail,
                 Subject = $"HUST PVO - Reset password",
                 Body = mailText,
+            };
+
+            await SendEmailAsync(mailParam);
+        }
+
+        public async Task SendEmailBackupData(string toEmail, string dictionaryName, IFormFile attachment, DateTime? dateTime = null)
+        {
+            var contentRootPath = _hostEnvironment.ContentRootPath;
+            var filePath = Path.Combine(contentRootPath, "Template", "BackupDataTemplate.html");
+            StreamReader str = new StreamReader(filePath);
+            string mailText = str.ReadToEnd();
+            
+            str.Close();
+
+            var now = dateTime ?? DateTime.Now;
+            mailText = mailText
+                .Replace("[DictionaryName]", dictionaryName)
+                .Replace("[DateTime]", now.ToString("dddd, dd MMMM yyyy HH:mm:ss"));
+
+            var mailParam = new MailParam
+            {
+                ToEmail = toEmail,
+                Subject = $"HUST PVO - Backup data",
+                Body = mailText,
+                Attachments = new List<IFormFile> { attachment }
             };
 
             await SendEmailAsync(mailParam);

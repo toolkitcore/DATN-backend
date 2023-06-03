@@ -26,5 +26,20 @@ namespace HUST.Core.Interfaces.Service
         /// <returns></returns>
         Task<byte[]> ExportDictionary(string userId, string dictionaryId);
 
+        /// <summary>
+        /// Backup dữ liệu và gửi vào email
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        Task<IServiceResult> BackupData(string email, string dictionaryId);
+
+        /// <summary>
+        /// Lấy tên file export
+        /// </summary>
+        /// <param name="dictionaryName"></param>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        string GetExportFileName(string dictionaryName, DateTime? dateTime = null);
     }
 }

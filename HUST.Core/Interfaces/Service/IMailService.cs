@@ -1,4 +1,5 @@
 ﻿using HUST.Core.Models.Param;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,7 @@ namespace HUST.Core.Interfaces.Service
         Task SendEmailActivateAccount(string toEmail, string callbackLink);
 
         Task SendEmailResetPassword(string toEmail, string callbackLink);
+
+        Task SendEmailBackupData(string toEmail, string dictionaryName, IFormFile attachment, DateTime? dateTime = null);
     }
 }

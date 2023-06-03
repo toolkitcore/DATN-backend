@@ -5,6 +5,7 @@ using HUST.Core.Interfaces.Service;
 using HUST.Core.Models.Entity;
 using HUST.Core.Models.ServerObject;
 using HUST.Core.Utils;
+using Microsoft.AspNetCore.Http;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
@@ -24,16 +25,20 @@ namespace HUST.Core.Services
 
         private readonly IDictionaryRepository _repository;
         private readonly StorageUtil _storage;
+        private readonly IMailService _mailService;
+
         #endregion
 
         #region Constructor
 
         public TemplateService(IDictionaryRepository dictionaryRepository,
             StorageUtil storage,
+            IMailService mailService,
             IHustServiceCollection serviceCollection) : base(serviceCollection)
         {
             _repository = dictionaryRepository;
             _storage = storage;
+            _mailService = mailService;
         }
         #endregion
 
@@ -114,9 +119,81 @@ namespace HUST.Core.Services
                 return p.GetAsByteArray();
             }
         }
+
+        /// <summary>
+        /// Backup dữ liệu và gửi vào email
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> BackupData(string email, string dictionaryId)
+        {
+            var res = new ServiceResult();
+
+            if(string.IsNullOrEmpty(email))
+            {
+                email = this.ServiceCollection.AuthUtil.GetCurrentUser()?.Email;
+            }
+
+            if (string.IsNullOrEmpty(dictionaryId))
+            {
+                dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId()?.ToString();
+            }
+
+            // Lấy thông tin về từ điển
+            var dict = await _repository.SelectObject<Models.DTO.Dictionary>(new Dictionary<string, object>
+            {
+                { nameof(dictionary.dictionary_id), dictionaryId } 
+            }) as Models.DTO.Dictionary;
+
+            if(dict == null)
+            {
+                return res.OnError(ErrorCode.Err2000, ErrorMessage.Err2000);
+            }
+
+            var fileByte = await this.ExportDictionary(dict.UserId?.ToString(), dictionaryId);
+            using (var stream = new MemoryStream(fileByte))
+            {
+                var now = DateTime.Now;
+                var fileName = this.GetExportFileName(dict.DictionaryName, now);
+                var file = new FormFile(stream, 0, fileByte.Length, fileName, fileName)
+                {
+                    Headers = new HeaderDictionary(),
+                    ContentType = FileContentType.Excel,
+                };
+
+                var cd = new System.Net.Mime.ContentDisposition
+                {
+                    FileName = fileName
+                };
+                file.ContentDisposition = cd.ToString();
+
+                await _mailService.SendEmailBackupData(email, dict.DictionaryName, file, now);
+            }
+            return res;
+        }
         #endregion
 
         #region Helper
+        /// <summary>
+        /// Lấy tên file export
+        /// </summary>
+        /// <param name="dictionaryName"></param>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        public string GetExportFileName(string dictionaryName, DateTime? dateTime = null)
+        {
+            var normalizedDictName = (dictionaryName ?? "").Replace(' ', '_');
+            if (normalizedDictName.Length > 20)
+            {
+                normalizedDictName = normalizedDictName.Substring(0, 20);
+            }
+            var fileName = string.Format(TemplateConfig.FileDefaultName.ExportFile,
+                normalizedDictName,
+                (dateTime ?? DateTime.Now).ToString("yyyyMMdd'T'HHmmss"));
+            return fileName;
+        }
+
         /// <summary>
         /// Lấy dữ liệu sheet config để bind vào mẫu nhập khẩu
         /// </summary>
