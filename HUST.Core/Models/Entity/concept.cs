@@ -29,5 +29,15 @@ namespace HUST.Core.Models.Entity
         /// Mô tả/định nghĩa
         /// </summary>
         public string description { get; set; }
+
+        /// <summary>
+        /// Title được chuẩn hóa
+        /// </summary>
+        public string normalized_title { get; set; }
+
+        /// <summary>
+        /// Giá trị soundex của title
+        /// </summary>
+        public string soundex_title { get; set; }
     }
 }
