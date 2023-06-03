@@ -44,7 +44,7 @@ namespace HUST.Api
             services.AddScoped<IDictionaryService, DictionaryService>();
             services.AddScoped<ITemplateService, TemplateService>();
             services.AddScoped<IConceptService, ConceptService>();
-
+            services.AddScoped<IUserConfig, UserConfigService>();
 
 
             services.AddScoped<IUserRepository, UserRepository>();
