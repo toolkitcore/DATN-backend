@@ -109,6 +109,15 @@ namespace HUST.Core.Models
             CreateMap<audit_log, AuditLog>();
             CreateMap<audit_log, AuditLog>().ReverseMap();
             //CreateMap<AuditLog, audit_log>().ReverseMap();
+
+            CreateMap<view_concept_relationship, ViewConceptRelationship>();
+            CreateMap<view_concept_relationship, ViewConceptRelationship>().ReverseMap();
+
+            CreateMap<view_example_relationship, ViewExampleRelationship>();
+            CreateMap<view_example_relationship, ViewExampleRelationship>().ReverseMap();
+
+            CreateMap<view_example, ViewExample>();
+            CreateMap<view_example, ViewExample>().ReverseMap();
             #endregion
         }
 
