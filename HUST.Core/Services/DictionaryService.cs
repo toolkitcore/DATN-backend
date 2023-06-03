@@ -48,6 +48,28 @@ namespace HUST.Core.Services
 
         #region Method
         /// <summary>
+        /// Lấy thông tin từ điển theo id
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetDictionaryById(string dictionaryId)
+        {
+            var res = new ServiceResult();
+
+            if(string.IsNullOrEmpty(dictionaryId))
+            {
+                dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId()?.ToString();
+            }
+
+            res.Data = await _repository.SelectObject<Models.DTO.Dictionary>(new Dictionary<string, object>()
+            {
+                { nameof(Models.Entity.dictionary.dictionary_id), dictionaryId }
+            }) as Models.DTO.Dictionary;
+
+            return res;
+        }
+
+        /// <summary>
         /// Lấy danh sách từ điển đã tạo của người dùng
         /// </summary>
         /// <returns></returns>
@@ -422,139 +444,6 @@ namespace HUST.Core.Services
 
             res.Data = data;
 
-            return res;
-        }
-
-        /// <summary>
-        /// Lấy template nhập khẩu dạng byte
-        /// </summary>
-        /// <returns></returns>
-        public async Task<byte[]> DowloadTemplateImportDictionary()
-        {
-            var downloadUrl = await _storage.GetDownloadUrlAsync(StoragePath.Import, FileDefaultName.DefaultTemplateProtect);
-
-            var configData = await this.GetConfigDataForTemplate();
-            if(configData == null)
-            {
-                return null;
-            }
-
-            {
-                using var client = new WebClient();
-                var content = client.DownloadData(downloadUrl);
-
-                using var stream = new MemoryStream(content);
-
-                using var p = new ExcelPackage(stream);
-                var ws = p.Workbook.Worksheets[ImportTemplateWorksheet.Config];
-
-                ws.Cells[ImportTemplateWorksheetStructure.Config.ConceptLinkCellAddress]
-                    .LoadFromCollection(configData[nameof(concept_link)] ?? new List<string>());
-
-                ws.Cells[ImportTemplateWorksheetStructure.Config.ExampleLinkCellAddress]
-                    .LoadFromCollection(configData[nameof(example_link)] ?? new List<string>());
-
-                ws.Cells[ImportTemplateWorksheetStructure.Config.ToneCellAddress]
-                    .LoadFromCollection(configData[nameof(tone)] ?? new List<string>());
-
-                ws.Cells[ImportTemplateWorksheetStructure.Config.ModeCellAddress]
-                    .LoadFromCollection(configData[nameof(mode)] ?? new List<string>());
-
-                ws.Cells[ImportTemplateWorksheetStructure.Config.RegisterCellAddress]
-                    .LoadFromCollection(configData[nameof(register)] ?? new List<string>());
-
-                ws.Cells[ImportTemplateWorksheetStructure.Config.NuanceCellAddress]
-                    .LoadFromCollection(configData[nameof(nuance)] ?? new List<string>());
-
-                ws.Cells[ImportTemplateWorksheetStructure.Config.DialectCellAddress]
-                    .LoadFromCollection(configData[nameof(dialect)] ?? new List<string>());
-
-                p.Save();
-                return p.GetAsByteArray();
-            }
-        }
-        #endregion
-
-        #region Helper
-        /// <summary>
-        /// Lấy dữ liệu sheet config để bind vào mẫu nhập khẩu
-        /// </summary>
-        /// <returns></returns>
-        public async Task<Dictionary<string, IEnumerable<string>>> GetConfigDataForTemplate()
-        {
-            var userId = this.ServiceCollection.AuthUtil.GetCurrentUserId();
-
-            var tables = new string[]
-            {
-                nameof(concept_link),
-                nameof(example_link),
-                nameof(tone),
-                nameof(mode),
-                nameof(register),
-                nameof(nuance),
-                nameof(dialect)
-            };
-
-            // Không dùng từ "params"
-            var param = new Dictionary<string, Dictionary<string, object>>()
-            {
-                {
-                    nameof(concept_link),
-                    new Dictionary<string, object> { { nameof(concept_link.user_id), userId } }
-                },
-                {
-                    nameof(example_link),
-                    new Dictionary<string, object> { { nameof(example_link.user_id), userId } }
-                },
-                {
-                    nameof(tone),
-                    new Dictionary<string, object> { { nameof(tone.user_id), userId } }
-                },
-                {
-                    nameof(mode),
-                    new Dictionary<string, object> { { nameof(mode.user_id), userId } }
-                },
-                {
-                    nameof(register),
-                    new Dictionary<string, object> { { nameof(register.user_id), userId } }
-                },
-                {
-                    nameof(nuance),
-                    new Dictionary<string, object> { { nameof(nuance.user_id), userId } }
-                },
-                {
-                    nameof(dialect),
-                    new Dictionary<string, object> { { nameof(dialect.user_id), userId } }
-                }
-            };
-
-            var queryRes = await _repository.SelectManyObjects(tables, param) as Dictionary<string, object>;
-
-            if (queryRes == null)
-            {
-                return null;
-            }
-
-            var lstConceptLink = queryRes[nameof(concept_link)] as List<concept_link>;
-            //var lstExampleLink = (queryRes[nameof(example_link)] as List<object>).Cast<example_link>().ToList()
-            var lstExampleLink = queryRes[nameof(example_link)] as List<example_link>;
-            var lstTone = queryRes[nameof(tone)] as List<tone>;
-            var lstMode = queryRes[nameof(mode)] as List<mode>;
-            var lstRegister = queryRes[nameof(register)] as List<register>;
-            var lstNuance = queryRes[nameof(nuance)] as List<nuance>;
-            var lstDialect = queryRes[nameof(dialect)] as List<dialect>;
-
-            // Kết quả trả về
-            var res = new Dictionary<string, IEnumerable<string>>();
-            res.Add(nameof(concept_link),
-                lstConceptLink?.Where(x => x.concept_link_type != (int)ConceptLinkType.NoLink)?.Select(x => x.concept_link_name));
-            res.Add(nameof(example_link),
-                lstExampleLink?.Where(x => x.example_link_type != (int)ExampleLinkType.NoLink)?.Select(x => x.example_link_name));
-            res.Add(nameof(tone), lstTone?.Select(x => x.tone_name));
-            res.Add(nameof(mode), lstMode?.Select(x => x.mode_name));
-            res.Add(nameof(register), lstRegister?.Select(x => x.register_name));
-            res.Add(nameof(nuance), lstNuance?.Select(x => x.nuance_name));
-            res.Add(nameof(dialect), lstDialect?.Select(x => x.dialect_name));
             return res;
         }
         #endregion

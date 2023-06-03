@@ -14,5 +14,6 @@ namespace HUST.Core.Models.DTO
         public string RegisterName { get; set; }
         public string NuanceName { get; set; }
         public string DialectName { get; set; }
+        public string Note { get; set; }
     }
 }

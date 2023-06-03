@@ -14,6 +14,6 @@ namespace HUST.Core.Models.Entity
         public string register_name { get; set; }
         public string nuance_name { get; set; }
         public string dialect_name { get; set; }
-
+        public string note { get; set; }
     }
 }
