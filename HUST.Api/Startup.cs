@@ -1,4 +1,5 @@
-﻿using HUST.Core.Interfaces.Repository;
+﻿using HUST.Core.Constants;
+using HUST.Core.Interfaces.Repository;
 using HUST.Core.Interfaces.Service;
 using HUST.Core.Services;
 using HUST.Core.Utils;
@@ -24,7 +25,6 @@ namespace HUST.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -36,7 +36,7 @@ namespace HUST.Api
 
             // Thiết lập các cấu hình theo base config
             BaseStartupConfig.ConfigureServices(ref services, Configuration);
-
+            
             // Thiết lập Dependencies Inject
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IUserService, UserService>();
@@ -57,6 +57,8 @@ namespace HUST.Api
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            GlobalConfig.IsDevelopment = env.IsDevelopment();
+            GlobalConfig.Environment = env.EnvironmentName;
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
