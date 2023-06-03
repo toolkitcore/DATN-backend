@@ -56,30 +56,6 @@ namespace HUST.Api.Controllers
         }
 
         /// <summary>
-        /// Nhập khẩu
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("import")]
-        public async Task<IActionResult> ImportDictionary()
-        {
-            var res = new ServiceResult();
-            try
-            {
-                var fileBytes = await _service.DowloadTemplateImportDictionary();
-                if (fileBytes == null || fileBytes.Length == 0)
-                {
-                    return StatusCode((int)HttpStatusCode.NoContent);
-                }
-                return File(fileBytes, FileContentType.OctetStream, TemplateConfig.FileDefaultName.DownloadDefaultTemplate);
-            }
-            catch (Exception ex)
-            {
-                this.ServiceCollection.HandleControllerException(res, ex);
-                return StatusCode((int)HttpStatusCode.InternalServerError, res);
-            }
-        }
-
-        /// <summary>
         /// Xuất khẩu
         /// </summary>
         /// <returns></returns>
@@ -133,6 +109,28 @@ namespace HUST.Api.Controllers
                 this.ServiceCollection.HandleControllerException(res, ex);
             }
 
+            return res;
+        }
+
+        /// <summary>
+        /// Nhập khẩu
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("import")]
+        public async Task<IServiceResult> ImportDictionary()
+        {
+            var res = new ServiceResult();
+            try
+            {
+                var file = HttpContext.Request.Form.Files[0];
+                var dictionaryId = HttpContext.Request.Form["dictionaryId"].ToString();
+
+                return await _service.ImportDictionary(dictionaryId, file);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
             return res;
         }
     }

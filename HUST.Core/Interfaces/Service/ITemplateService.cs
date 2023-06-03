@@ -1,6 +1,7 @@
 ﻿using HUST.Core.Models.DTO;
 using HUST.Core.Models.Param;
 using HUST.Core.Models.ServerObject;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -41,5 +42,13 @@ namespace HUST.Core.Interfaces.Service
         /// <param name="dateTime"></param>
         /// <returns></returns>
         string GetExportFileName(string dictionaryName, DateTime? dateTime = null);
+
+        /// <summary>
+        /// Nhập khẩu
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        Task<IServiceResult> ImportDictionary(string dictionaryId, IFormFile file);
     }
 }

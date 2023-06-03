@@ -172,6 +172,41 @@ namespace HUST.Core.Services
             }
             return res;
         }
+
+        /// <summary>
+        /// Nhập khẩu
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> ImportDictionary(string dictionaryId, IFormFile file)
+        {
+            var res = new ServiceResult();
+            if(!string.IsNullOrEmpty(dictionaryId))
+            {
+                dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId()?.ToString();
+            }
+
+            // Validate file
+            if(file == null || Path.GetExtension(file.FileName) != FileExtension.Excel2007)
+            {
+                return res.OnError(ErrorCode.Err9001, ErrorMessage.Err9001);
+            }
+
+            using var stream = file.OpenReadStream();
+            using var p = new ExcelPackage(stream);
+
+            // Validate file token
+            var token = p.Workbook.Properties.GetCustomPropertyValue(TemplateConfig.CustomProperty.TokenPropertyName);
+            if (token == null || token.ToString() != TemplateConfig.CustomProperty.TokenPropertyValue)
+            {
+                return res.OnError(ErrorCode.Err9001, ErrorMessage.Err9001);
+            }
+
+            // TODO: Xử lý file
+
+            return res;
+        }
         #endregion
 
         #region Helper

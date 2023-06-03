@@ -7,6 +7,15 @@ using System.Threading.Tasks;
 namespace HUST.Core.Constants
 {
     /// <summary>
+    /// Extension của file
+    /// </summary>
+    public static class FileExtension
+    {
+        public const string Excel2007 = ".xlsx";
+        public static readonly string[] Image = {".png", ".jpeg", ".jpg"};
+    }
+
+    /// <summary>
     /// Loại dữ liệu của file
     /// </summary>
     public static class FileContentType
