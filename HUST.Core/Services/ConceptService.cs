@@ -200,7 +200,8 @@ namespace HUST.Core.Services
 
                 if (linkedExample != null && linkedExample.Count > 0)
                 {
-                    return res.OnError(ErrorCode.Err3002, ErrorMessage.Err3002, data: linkedExample.Count);
+                    return res.OnError(ErrorCode.Err3002, ErrorMessage.Err3002, data: new { NumberExample = linkedExample.Count }
+                    );
                 }
             }
 
