@@ -36,8 +36,25 @@ namespace HUST.Core.Interfaces.Service
         /// Thực hiện xóa concept
         /// </summary>
         /// <param name="conceptId"></param>
+        /// <param name="isForced"></param>
         /// <returns></returns>
-        Task<IServiceResult> DeleteConcept(string conceptId);
+        Task<IServiceResult> DeleteConcept(string conceptId, bool? isForced);
+
+        /// <summary>
+        /// Lấy dữ liệu concept và các example liên kết với concept đó
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <returns></returns>
+        Task<IServiceResult> GetConcept(string conceptId);
+
+        /// <summary>
+        /// Lấy danh sách concept trong từ điển mà khớp với xâu tìm kiếm của người dùng
+        /// </summary>
+        /// <param name="searchKey"></param>
+        /// <param name="dictionaryId"></param>
+        /// <param name="isSearchSoundex"></param>
+        /// <returns></returns>
+        Task<IServiceResult> SearchConcept(string searchKey, string dictionaryId, bool? isSearchSoundex);
 
         Task<ServiceResult> GetListRecommendConcept(List<string> keywords, Guid dictionaryId);
     }

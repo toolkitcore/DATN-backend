@@ -167,7 +167,7 @@ namespace HUST.Core.Services
                 modified_date = DateTime.Now
             });
 
-            if(!result)
+            if (!result)
             {
                 return res.OnError(ErrorCode.Err9999);
             }
@@ -179,25 +179,29 @@ namespace HUST.Core.Services
         /// Thực hiện xóa concept
         /// </summary>
         /// <param name="conceptId"></param>
+        /// <param name="isForced"></param>
         /// <returns></returns>
-        public async Task<IServiceResult> DeleteConcept(string conceptId)
+        public async Task<IServiceResult> DeleteConcept(string conceptId, bool? isForced)
         {
             var res = new ServiceResult();
 
-            if(string.IsNullOrEmpty(conceptId))
+            if (string.IsNullOrEmpty(conceptId))
             {
                 return res.OnError(ErrorCode.Err9999);
             }
 
             // Kiểm tra concept có liên kết với example hay không
-            var linkedExample = await _repository.SelectObjects<ExampleRelationship>(new
+            if(isForced != true)
             {
-                concept_id = conceptId
-            }) as List<ExampleRelationship>;
+                var linkedExample = await _repository.SelectObjects<ExampleRelationship>(new
+                {
+                    concept_id = conceptId
+                }) as List<ExampleRelationship>;
 
-            if(linkedExample != null && linkedExample.Count > 0)
-            {
-                return res.OnError(ErrorCode.Err3002, ErrorMessage.Err3002, data: linkedExample.Count);
+                if (linkedExample != null && linkedExample.Count > 0)
+                {
+                    return res.OnError(ErrorCode.Err3002, ErrorMessage.Err3002, data: linkedExample.Count);
+                }
             }
 
             // Thực hiện xóa concept
@@ -206,10 +210,93 @@ namespace HUST.Core.Services
                 concept_id = conceptId
             });
 
-            if(!result)
+            if (!result)
             {
                 return res.OnError(ErrorCode.Err3005, ErrorMessage.Err3005);
             }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu concept và các example liên kết với concept đó
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetConcept(string conceptId)
+        {
+            var res = new ServiceResult();
+
+            if (string.IsNullOrEmpty(conceptId))
+            {
+                return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+            }
+
+            var tables = new string[]
+            {
+                nameof(Models.Entity.concept),
+                nameof(view_example_relationship)
+            };
+
+            // Không dùng từ "params"
+            var param = new Dictionary<string, Dictionary<string, object>>()
+            {
+                {
+                    nameof(Models.Entity.concept),
+                    new Dictionary<string, object> { { nameof(Models.Entity.concept.concept_id), conceptId } }
+                },
+                {
+                    nameof(view_example_relationship),
+                    new Dictionary<string, object> { { nameof(view_example_relationship.concept_id), conceptId } }
+                }
+            };
+
+            var queryRes = await _repository.SelectManyObjects(tables, param) as Dictionary<string, object>;
+
+            if (queryRes == null)
+            {
+                return null;
+            }
+
+            var concept = (queryRes[nameof(Models.Entity.concept)] as List<Models.Entity.concept>)?.FirstOrDefault();
+            var lstViewExampleRel = queryRes[nameof(view_example_relationship)] as List<view_example_relationship>;
+
+            // TODO: sort theo rule như thế nào?
+            var lstExample = lstViewExampleRel?.Select(x => new
+            {
+                ExampleId = x.example_id,
+                Detail = x.example,
+                DetailHtml = x.example_html,
+                ExampleLinkId = x.example_link_id,
+                ExampleLinkName = x.example_link_name
+            }).OrderBy(x => x.Detail).ToList();
+
+            return res.OnSuccess(new
+            {
+                ConceptId = concept?.concept_id,
+                Title = concept?.title,
+                Description = concept?.description,
+                NormalizedTitle = concept?.normalized_title,
+                ListExample = lstExample
+            });
+        }
+
+        /// <summary>
+        /// Lấy danh sách concept trong từ điển mà khớp với xâu tìm kiếm của người dùng
+        /// </summary>
+        /// <param name="searchKey"></param>
+        /// <param name="dictionaryId"></param>
+        /// <param name="isSearchSoundex"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> SearchConcept(string searchKey, string dictionaryId, bool? isSearchSoundex)
+        {
+            var res = new ServiceResult();
+            if(string.IsNullOrEmpty(dictionaryId))
+            {
+                dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId()?.ToString();
+            }
+            searchKey = FunctionUtil.NormalizeText(searchKey);
+            res.Data = (await _repository.SearchConcept(searchKey, dictionaryId, isSearchSoundex)).OrderBy(x => x.Title);
 
             return res;
         }

@@ -103,14 +103,58 @@ namespace HUST.Api.Controllers
         /// Thực hiện xóa concept
         /// </summary>
         /// <param name="conceptId"></param>
+        /// <param name="isForced"></param>
         /// <returns></returns>
         [HttpDelete("delete_concept")]
-        public async Task<IServiceResult> DeleteConcept([FromQuery] string conceptId)
+        public async Task<IServiceResult> DeleteConcept([FromQuery] string conceptId, bool? isForced)
         {
             var res = new ServiceResult();
             try
             {
-                return await _service.DeleteConcept(conceptId);
+                return await _service.DeleteConcept(conceptId, isForced);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu concept và các example liên kết với concept đó
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <returns></returns>
+        [HttpGet("get_concept")]
+        public async Task<IServiceResult> GetConcept([FromQuery] string conceptId)
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.GetConcept(conceptId);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Lấy danh sách concept trong từ điển mà khớp với xâu tìm kiếm của người dùng
+        /// </summary>
+        /// <param name="searchKey"></param>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        [HttpGet("search_concept")]
+        public async Task<IServiceResult> SearchConcept([FromQuery] string searchKey, string dictionaryId, bool? isSearchSoundex)
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.SearchConcept(searchKey, dictionaryId, isSearchSoundex);
             }
             catch (Exception ex)
             {

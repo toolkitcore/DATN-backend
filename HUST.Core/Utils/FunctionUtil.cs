@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using HUST.Core.Constants;
 using System.Net.Http;
 using Microsoft.AspNetCore.Http;
+using System.Text.RegularExpressions;
 
 namespace HUST.Core.Utils
 {
@@ -217,6 +218,22 @@ namespace HUST.Core.Utils
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Chuẩn hóa từ
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static string NormalizeText(string text)
+        {
+            if(string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+            text = text.Trim().ToLower();
+            text = Regex.Replace(text, "[^0-9a-z ]", "");
+            return text;
         }
     }
 }
