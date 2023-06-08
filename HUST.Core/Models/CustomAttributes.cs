@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OfficeOpenXml.Attributes;
+using System;
 
 namespace HUST.Core.Models
 {
@@ -59,6 +60,22 @@ namespace HUST.Core.Models
         public MyMaxLengthAttribute(int maxLength)
         {
             MaxLength = maxLength;
+        }
+    }
+
+    /// <summary>
+    /// Thuộc tính xác định vị trí cột map mẫu nhập khẩu
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property)]
+    public class ImportColumn : EpplusTableColumnAttribute
+    {
+        public int ColumnIndex { get; set; }
+
+
+        public ImportColumn(int column)
+        {
+            ColumnIndex = column;
+            Order = column;
         }
     }
 }

@@ -39,6 +39,14 @@ namespace HUST.Core.Constants
     }
 
     /// <summary>
+    /// Đường dẫn folder server
+    /// </summary>
+    public static class ServerStoragePath
+    {
+        public const string Import = "File/Import";
+    }
+
+    /// <summary>
     /// Giá trị xác định trước độ mạnh của liên kết
     /// </summary>
     public static class LinkStrength

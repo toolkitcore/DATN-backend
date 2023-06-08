@@ -2,6 +2,7 @@
 using HUST.Core.Enums;
 using HUST.Core.Interfaces.Repository;
 using HUST.Core.Interfaces.Service;
+using HUST.Core.Models.DTO;
 using HUST.Core.Models.Entity;
 using HUST.Core.Models.ServerObject;
 using HUST.Core.Utils;
@@ -9,9 +10,9 @@ using Microsoft.AspNetCore.Http;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 
 namespace HUST.Core.Services
@@ -22,23 +23,26 @@ namespace HUST.Core.Services
     public class TemplateService : BaseService, ITemplateService
     {
         #region Field
-
         private readonly IDictionaryRepository _repository;
         private readonly StorageUtil _storage;
         private readonly IMailService _mailService;
+        private readonly IUserConfigService _userConfigService;
 
         #endregion
 
         #region Constructor
 
-        public TemplateService(IDictionaryRepository dictionaryRepository,
+        public TemplateService(
+            IDictionaryRepository dictionaryRepository,
             StorageUtil storage,
             IMailService mailService,
+            IUserConfigService userConfigService,
             IHustServiceCollection serviceCollection) : base(serviceCollection)
         {
             _repository = dictionaryRepository;
             _storage = storage;
             _mailService = mailService;
+            _userConfigService = userConfigService;
         }
         #endregion
 
@@ -49,10 +53,6 @@ namespace HUST.Core.Services
         /// <returns></returns>
         public async Task<byte[]> DowloadTemplateImportDictionary()
         {
-            var downloadUrl = await _storage.GetDownloadUrlAsync(
-                StoragePath.Import,
-                TemplateConfig.FileDefaultName.DefaultTemplateProtect);
-
             var configData = await this.GetConfigData();
             if (configData == null)
             {
@@ -60,8 +60,15 @@ namespace HUST.Core.Services
             }
 
             {
-                using var client = new WebClient();
-                var content = client.DownloadData(downloadUrl);
+                //var downloadUrl = await _storage.GetDownloadUrlAsync(
+                //    StoragePath.Import,
+                //    TemplateConfig.FileDefaultName.DefaultTemplateProtect);
+                //using var client = new WebClient();
+                //var content = client.DownloadData(downloadUrl);
+                var filePath = Path.Combine(GlobalConfig.ContentRootPath, 
+                    ServerStoragePath.Import, 
+                    TemplateConfig.FileDefaultName.DefaultTemplateProtect);
+                var content = File.ReadAllBytes(filePath);
 
                 using var stream = new MemoryStream(content);
 
@@ -85,10 +92,6 @@ namespace HUST.Core.Services
         /// <returns></returns>
         public async Task<byte[]> ExportDictionary(string userId, string dictionaryId)
         {
-            var downloadUrl = await _storage.GetDownloadUrlAsync(
-                StoragePath.Import,
-                TemplateConfig.FileDefaultName.DefaultTemplateProtect);
-
             var configData = await this.GetConfigData(userId);
             if (configData == null)
             {
@@ -100,10 +103,17 @@ namespace HUST.Core.Services
             {
                 return null;
             }
-            
+
             {
-                using var client = new WebClient();
-                var content = client.DownloadData(downloadUrl);
+                //var downloadUrl = await _storage.GetDownloadUrlAsync(
+                //    StoragePath.Import,
+                //    TemplateConfig.FileDefaultName.DefaultTemplateProtect);
+                //using var client = new WebClient();
+                //var content = client.DownloadData(downloadUrl);
+                var filePath = Path.Combine(GlobalConfig.ContentRootPath, 
+                    ServerStoragePath.Import, 
+                    TemplateConfig.FileDefaultName.DefaultTemplateProtect);
+                var content = File.ReadAllBytes(filePath);
 
                 using var stream = new MemoryStream(content);
 
@@ -130,7 +140,7 @@ namespace HUST.Core.Services
         {
             var res = new ServiceResult();
 
-            if(string.IsNullOrEmpty(email))
+            if (string.IsNullOrEmpty(email))
             {
                 email = this.ServiceCollection.AuthUtil.GetCurrentUser()?.Email;
             }
@@ -143,10 +153,10 @@ namespace HUST.Core.Services
             // Lấy thông tin về từ điển
             var dict = await _repository.SelectObject<Models.DTO.Dictionary>(new Dictionary<string, object>
             {
-                { nameof(dictionary.dictionary_id), dictionaryId } 
+                { nameof(dictionary.dictionary_id), dictionaryId }
             }) as Models.DTO.Dictionary;
 
-            if(dict == null)
+            if (dict == null)
             {
                 return res.OnError(ErrorCode.Err2000, ErrorMessage.Err2000);
             }
@@ -182,13 +192,13 @@ namespace HUST.Core.Services
         public async Task<IServiceResult> ImportDictionary(string dictionaryId, IFormFile file)
         {
             var res = new ServiceResult();
-            if(!string.IsNullOrEmpty(dictionaryId))
+            if (string.IsNullOrEmpty(dictionaryId))
             {
                 dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId()?.ToString();
             }
 
             // Validate file
-            if(file == null || Path.GetExtension(file.FileName) != FileExtension.Excel2007)
+            if (file == null || Path.GetExtension(file.FileName) != FileExtension.Excel2007)
             {
                 return res.OnError(ErrorCode.Err9001, ErrorMessage.Err9001);
             }
@@ -204,7 +214,10 @@ namespace HUST.Core.Services
             }
 
             // TODO: Xử lý file
+            var wb = p.Workbook;
+            this.HandleImportData(ref wb, dictionaryId);
 
+            res.Data = p.GetAsByteArray();
             return res;
         }
         #endregion
@@ -236,82 +249,19 @@ namespace HUST.Core.Services
         /// <returns></returns>
         public async Task<Dictionary<string, IEnumerable<string>>> GetConfigData(string userId = null)
         {
-            if (string.IsNullOrEmpty(userId))
-            {
-                userId = this.ServiceCollection.AuthUtil.GetCurrentUserId()?.ToString();
-            }
-
-            var tables = new string[]
-            {
-                nameof(concept_link),
-                nameof(example_link),
-                nameof(tone),
-                nameof(mode),
-                nameof(register),
-                nameof(nuance),
-                nameof(dialect)
-            };
-
-            // Không dùng từ "params"
-            var param = new Dictionary<string, Dictionary<string, object>>()
-            {
-                {
-                    nameof(concept_link),
-                    new Dictionary<string, object> { { nameof(concept_link.user_id), userId } }
-                },
-                {
-                    nameof(example_link),
-                    new Dictionary<string, object> { { nameof(example_link.user_id), userId } }
-                },
-                {
-                    nameof(tone),
-                    new Dictionary<string, object> { { nameof(tone.user_id), userId } }
-                },
-                {
-                    nameof(mode),
-                    new Dictionary<string, object> { { nameof(mode.user_id), userId } }
-                },
-                {
-                    nameof(register),
-                    new Dictionary<string, object> { { nameof(register.user_id), userId } }
-                },
-                {
-                    nameof(nuance),
-                    new Dictionary<string, object> { { nameof(nuance.user_id), userId } }
-                },
-                {
-                    nameof(dialect),
-                    new Dictionary<string, object> { { nameof(dialect.user_id), userId } }
-                }
-            };
-
-            var queryRes = await _repository.SelectManyObjects(tables, param) as Dictionary<string, object>;
-
-            if (queryRes == null)
-            {
-                return null;
-            }
-
-            var lstConceptLink = queryRes[nameof(concept_link)] as List<concept_link>;
-            //var lstExampleLink = (queryRes[nameof(example_link)] as List<object>).Cast<example_link>().ToList()
-            var lstExampleLink = queryRes[nameof(example_link)] as List<example_link>;
-            var lstTone = queryRes[nameof(tone)] as List<tone>;
-            var lstMode = queryRes[nameof(mode)] as List<mode>;
-            var lstRegister = queryRes[nameof(register)] as List<register>;
-            var lstNuance = queryRes[nameof(nuance)] as List<nuance>;
-            var lstDialect = queryRes[nameof(dialect)] as List<dialect>;
+            var rawConfigData = await _userConfigService.GetAllConfigData(userId);
 
             // Kết quả trả về
             var res = new Dictionary<string, IEnumerable<string>>();
             res.Add(nameof(concept_link),
-                lstConceptLink?.Where(x => x.concept_link_type != (int)ConceptLinkType.NoLink)?.Select(x => x.concept_link_name));
+                rawConfigData.ListConceptLink.Where(x => x.concept_link_type != (int)ConceptLinkType.NoLink)?.Select(x => x.concept_link_name));
             res.Add(nameof(example_link),
-                lstExampleLink?.Where(x => x.example_link_type != (int)ExampleLinkType.NoLink)?.Select(x => x.example_link_name));
-            res.Add(nameof(tone), lstTone?.Select(x => x.tone_name));
-            res.Add(nameof(mode), lstMode?.Select(x => x.mode_name));
-            res.Add(nameof(register), lstRegister?.Select(x => x.register_name));
-            res.Add(nameof(nuance), lstNuance?.Select(x => x.nuance_name));
-            res.Add(nameof(dialect), lstDialect?.Select(x => x.dialect_name));
+                rawConfigData.ListExampleLink.Where(x => x.example_link_type != (int)ExampleLinkType.NoLink)?.Select(x => x.example_link_name));
+            res.Add(nameof(tone), rawConfigData.ListTone.Select(x => x.tone_name));
+            res.Add(nameof(mode), rawConfigData.ListMode.Select(x => x.mode_name));
+            res.Add(nameof(register), rawConfigData.ListRegister.Select(x => x.register_name));
+            res.Add(nameof(nuance), rawConfigData.ListNuance.Select(x => x.nuance_name));
+            res.Add(nameof(dialect), rawConfigData.ListDialect.Select(x => x.dialect_name));
             return res;
         }
 
@@ -400,6 +350,7 @@ namespace HUST.Core.Services
         public void SetExportData(ref ExcelWorksheets sheets, Dictionary<string, object> exportData)
         {
             var startRow = TemplateConfig.StartRowData;
+            var startCol = TemplateConfig.StartColData;
 
             var lstConcept = exportData[nameof(concept)] as List<concept> ?? new List<concept>();
             var lstConceptRel = exportData[nameof(view_concept_relationship)] as List<view_concept_relationship> ?? new List<view_concept_relationship>();
@@ -407,59 +358,220 @@ namespace HUST.Core.Services
             var lstExampleRel = exportData[nameof(view_example_relationship)] as List<view_example_relationship> ?? new List<view_example_relationship>();
 
             // Bind vào sheet concept
-            var conceptWs = sheets[TemplateConfig.WorksheetName.Concept];
-
-            conceptWs.Cells[startRow, TemplateConfig.ConceptSheet.Title]
-                .LoadFromCollection(lstConcept.Select(x => x.title));
-
-            conceptWs.Cells[startRow, TemplateConfig.ConceptSheet.Description]
-                .LoadFromCollection(lstConcept.Select(x => x.description));
-
+            var ws = sheets[TemplateConfig.WorksheetName.Concept]; 
+            var lstConceptImport = this.ServiceCollection.Mapper.Map<List<ConceptImport>>(lstConcept);
+            ws.Cells[startRow, startCol].LoadFromCollection(lstConceptImport);
+            
             // Bind vào sheet concept relationship
-            var conceptRelWs = sheets[TemplateConfig.WorksheetName.ConceptRelationship];
-
-            conceptRelWs.Cells[startRow, TemplateConfig.ConceptRelationshipSheet.ChildConcept]
-                .LoadFromCollection(lstConceptRel.Select(x => x.child_name));
-
-            conceptRelWs.Cells[startRow, TemplateConfig.ConceptRelationshipSheet.ParentConcept]
-                .LoadFromCollection(lstConceptRel.Select(x => x.parent_name));
-
-            conceptRelWs.Cells[startRow, TemplateConfig.ConceptRelationshipSheet.Relation]
-                .LoadFromCollection(lstConceptRel.Select(x => x.concept_link_name));
+            ws = sheets[TemplateConfig.WorksheetName.ConceptRelationship];
+            var lstConceptRelImport = this.ServiceCollection.Mapper.Map<List<ConceptRelationshipImport>>(lstConceptRel);
+            ws.Cells[startRow, startCol].LoadFromCollection(lstConceptRelImport);
 
             // Bind vào sheet example
-            var exampleWs = sheets[TemplateConfig.WorksheetName.Example];
-            exampleWs.Cells[startRow, TemplateConfig.ExampleSheet.Example]
-                .LoadFromCollection(lstExample.Select(x => x.detail_html));
-
-            exampleWs.Cells[startRow, TemplateConfig.ExampleSheet.Tone]
-                .LoadFromCollection(lstExample.Select(x => x.tone_name));
-
-            exampleWs.Cells[startRow, TemplateConfig.ExampleSheet.Mode]
-                .LoadFromCollection(lstExample.Select(x => x.mode_name));
-
-            exampleWs.Cells[startRow, TemplateConfig.ExampleSheet.Register]
-                .LoadFromCollection(lstExample.Select(x => x.register_name));
-
-            exampleWs.Cells[startRow, TemplateConfig.ExampleSheet.Nuance]
-                .LoadFromCollection(lstExample.Select(x => x.nuance_name));
-
-            exampleWs.Cells[startRow, TemplateConfig.ExampleSheet.Dialect]
-                .LoadFromCollection(lstExample.Select(x => x.dialect_name));
-
-            exampleWs.Cells[startRow, TemplateConfig.ExampleSheet.Note]
-               .LoadFromCollection(lstExample.Select(x => x.note));
+            ws = sheets[TemplateConfig.WorksheetName.Example];
+            var lstExampleImport = this.ServiceCollection.Mapper.Map<List<ExampleImport>>(lstExample);
+            ws.Cells[startRow, startCol].LoadFromCollection(lstExampleImport);
 
             // Bind vào sheet example relationship
-            var exampleRelWs = sheets[TemplateConfig.WorksheetName.ExampleRelationship];
-            exampleRelWs.Cells[startRow, TemplateConfig.ExampleRelationshipSheet.Example]
-                .LoadFromCollection(lstExampleRel.Select(x => x.example_html));
-            exampleRelWs.Cells[startRow, TemplateConfig.ExampleRelationshipSheet.Concept]
-                .LoadFromCollection(lstExampleRel.Select(x => x.concept));
-            exampleRelWs.Cells[startRow, TemplateConfig.ExampleRelationshipSheet.Relation]
-                .LoadFromCollection(lstExampleRel.Select(x => x.example_link_name));
+            ws = sheets[TemplateConfig.WorksheetName.ExampleRelationship];
+            var lstExampleRelImport = this.ServiceCollection.Mapper.Map<List<ExampleRelationshipImport>>(lstExampleRel);
+            ws.Cells[startRow, startCol].LoadFromCollection(lstExampleRelImport);
+
         }
 
+        /// <summary>
+        /// Xử lý dữ liệu nhập khẩu
+        /// </summary>
+        /// <param name="wb"></param>
+        /// <returns></returns>
+        public void HandleImportData(ref ExcelWorkbook wb, string dictionaryId)
+        {
+            var sheets = wb.Worksheets;
+            var now = DateTime.Now;
+            var dictId = Guid.Parse(dictionaryId);
+
+            var configData = _userConfigService.GetAllConfigData().GetAwaiter().GetResult(); // Lấy dữ liệu config của user hiện tại
+
+
+            var lstValidateResult = new List<ValidateResultImport>();
+
+            // Dữ liệu concept
+            var ws = sheets[TemplateConfig.WorksheetName.Concept];
+            ws.Cells.Style.Font.Color.SetColor(Color.Black);
+            ws.Cells["D:D"].Clear();
+            var rowCount = ws.Dimension.Rows;
+            var lstConcept = new List<Concept>();
+
+            //var data = ws.Cells["B2:E9999"].ToCollectionWithMappings(row =>
+            //{
+            //    return new ConceptImport
+            //    {
+            //        Title = row.GetValue<string>(1),
+            //        Description = row.GetValue<string>(2),
+            //    };
+            //});
+
+            //var data1 = ws.ConvertSheetToObjects<ConceptImport>().ToList();
+
+            for (var rowIdx = TemplateConfig.StartRowData; rowIdx < rowCount; ++rowIdx)
+            {
+                // Data
+                var title = ws.Cells[rowIdx, TemplateConfig.ConceptSheet.Title].Value?.ToString()?.Trim();
+                var description = ws.Cells[rowIdx, TemplateConfig.ConceptSheet.Description].Value?.ToString()?.Trim();
+
+                if(string.IsNullOrEmpty(title) && string.IsNullOrEmpty(description))
+                {
+                    continue;
+                }
+
+                // Validate
+                var valid = true;
+                var err = new ValidateResultImport
+                {
+                    SheetIndex = ws.Index,
+                    SheetName = ws.Name,
+                    Row = rowIdx,
+                    ListErrorMessage = new List<string>()
+                };
+                if (string.IsNullOrEmpty(title))
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add("Title cannot be empty");
+                }
+
+                if (lstConcept.Any(x => x.Title == title))
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add("Title is duplicated");
+                }
+
+                if(!valid)
+                {
+                    ws.Row(rowIdx).Style.Font.Color.SetColor(Color.Red);
+                    ws.Cells[rowIdx, 4].Value = err.ErrorMessage;
+                    lstValidateResult.Add(err);
+                    continue;
+                }
+
+                lstConcept.Add(new Concept
+                {
+                    ConceptId = Guid.NewGuid(),
+                    Title = title,
+                    Description = description,
+                    DictionaryId = dictId,
+                    CreatedDate = now
+                });
+            }
+
+
+            // Dữ liệu concept relationship
+            ws = sheets[TemplateConfig.WorksheetName.ConceptRelationship];
+            ws.Cells.Style.Font.Color.SetColor(Color.Black);
+            ws.Cells["E:E"].Clear();
+            rowCount = ws.Dimension.Rows;
+            var lstConceptRel = new List<ConceptRelationship>();
+            for (var rowIdx = TemplateConfig.StartRowData; rowIdx < rowCount; ++rowIdx)
+            {
+                // Data
+                var childConcept = ws.Cells[rowIdx, TemplateConfig.ConceptRelationshipSheet.ChildConcept].Value?.ToString()?.Trim();
+                var parentConcept = ws.Cells[rowIdx, TemplateConfig.ConceptRelationshipSheet.ParentConcept].Value?.ToString()?.Trim();
+                var relation = ws.Cells[rowIdx, TemplateConfig.ConceptRelationshipSheet.Relation].Value?.ToString()?.Trim();
+
+                if (string.IsNullOrEmpty(childConcept) && string.IsNullOrEmpty(parentConcept) && string.IsNullOrEmpty(relation))
+                {
+                    continue;
+                }
+
+                // Validate
+                var valid = true;
+                var err = new ValidateResultImport
+                {
+                    SheetIndex = ws.Index,
+                    SheetName = ws.Name,
+                    Row = rowIdx,
+                    ListErrorMessage = new List<string>()
+                };
+
+                var findChildConcept = lstConcept.Find(x => x.Title == childConcept);
+                var findParentConcept = lstConcept.Find(x => x.Title == parentConcept);
+                var findRelation = configData.ListConceptLink.Find(x => x.concept_link_name == relation);
+
+                if (string.IsNullOrEmpty(childConcept))
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add("Child concept cannot be empty");
+                } 
+                else if (findChildConcept == null)
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add("Child concept does not exists");
+                }
+
+                if (string.IsNullOrEmpty(parentConcept))
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add("Parent concept cannot be empty");
+                }
+                else if (findParentConcept == null)
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add("Parent concept does not exists");
+                }
+
+                if(!string.IsNullOrEmpty(childConcept) && !string.IsNullOrEmpty(parentConcept) && childConcept == parentConcept)
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add("A concept can't link to itself");
+                }
+
+                if (string.IsNullOrEmpty(relation))
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add("Relation cannot be empty");
+                }
+                else if (findRelation == null)
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add("Relation does not exists");
+                }
+
+                if(lstConceptRel.Any(x => x.ConceptId == findChildConcept.ConceptId && x.ParentId == findParentConcept.ConceptId))
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add("Row is duplicated");
+                }
+                
+                if (lstConceptRel.Any(x => x.ConceptId == findParentConcept.ConceptId && x.ParentId == findChildConcept.ConceptId))
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add("Circle link");
+                }
+
+                if (!valid)
+                {
+                    ws.Row(rowIdx).Style.Font.Color.SetColor(Color.Red);
+                    ws.Cells[rowIdx, 5].Value = err.ErrorMessage;
+                    lstValidateResult.Add(err);
+                    continue;
+                }
+
+                lstConceptRel.Add(new ConceptRelationship
+                {
+                    ConceptId = findChildConcept.ConceptId,
+                    ParentId = findParentConcept.ConceptId,
+                    ConceptLinkId = findRelation.concept_link_id,
+                    DictionaryId = dictId,
+                    CreatedDate = now
+                });
+            }
+
+
+            // Dữ liệu example
+            var exampleWs = sheets[TemplateConfig.WorksheetName.Example];
+
+            // Dữ liệu example relationship
+            var exampleRelWs = sheets[TemplateConfig.WorksheetName.ExampleRelationship];
+        }
         #endregion
     }
 }

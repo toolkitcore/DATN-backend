@@ -44,7 +44,7 @@ namespace HUST.Api
             services.AddScoped<IDictionaryService, DictionaryService>();
             services.AddScoped<ITemplateService, TemplateService>();
             services.AddScoped<IConceptService, ConceptService>();
-            services.AddScoped<IUserConfig, UserConfigService>();
+            services.AddScoped<IUserConfigService, UserConfigService>();
 
 
             services.AddScoped<IUserRepository, UserRepository>();
@@ -58,6 +58,7 @@ namespace HUST.Api
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            GlobalConfig.ContentRootPath = env.ContentRootPath;
             GlobalConfig.IsDevelopment = env.IsDevelopment();
             GlobalConfig.Environment = env.EnvironmentName;
             if (env.IsDevelopment())

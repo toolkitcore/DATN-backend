@@ -48,6 +48,11 @@ namespace HUST.Core.Constants
         public const int StartRowData = 2;
 
         /// <summary>
+        /// Cột bắt đầu dữ liệu
+        /// </summary>
+        public const int StartColData = 2;
+
+        /// <summary>
         /// Cấu hình sheet config
         /// </summary>
         public static class ConfigSheet

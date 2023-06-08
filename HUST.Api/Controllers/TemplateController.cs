@@ -117,7 +117,7 @@ namespace HUST.Api.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost("import")]
-        public async Task<IServiceResult> ImportDictionary()
+        public async Task<IActionResult> ImportDictionary()
         {
             var res = new ServiceResult();
             try
@@ -125,13 +125,14 @@ namespace HUST.Api.Controllers
                 var file = HttpContext.Request.Form.Files[0];
                 var dictionaryId = HttpContext.Request.Form["dictionaryId"].ToString();
 
-                return await _service.ImportDictionary(dictionaryId, file);
+                var data =  (await _service.ImportDictionary(dictionaryId, file)).Data as byte[];
+                return File(data, FileContentType.Excel, "File error.xlsx");
             }
             catch (Exception ex)
             {
                 this.ServiceCollection.HandleControllerException(res, ex);
             }
-            return res;
+            return Ok();
         }
     }
 }

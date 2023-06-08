@@ -25,12 +25,12 @@ namespace HUST.Api.Controllers
     public class UserConfigController : BaseApiController
     {
         #region Fields
-        private readonly IUserConfig _service;
+        private readonly IUserConfigService _service;
         #endregion
 
         #region Constructors
 
-        public UserConfigController(IHustServiceCollection serviceCollection, IUserConfig service) : base(serviceCollection)
+        public UserConfigController(IHustServiceCollection serviceCollection, IUserConfigService service) : base(serviceCollection)
         {
             _service = service;
         }
