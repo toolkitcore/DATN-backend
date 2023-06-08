@@ -133,6 +133,40 @@ namespace HUST.Infrastructure.Repositories
                 return result > 0;
             }
         }
+
+        public async Task<bool> Insert<T>(T entity, IDbTransaction dbTransaction = null) where T : class
+        {
+            if (dbTransaction != null)
+            {
+                var connection = dbTransaction.Connection;
+                await connection.InsertAsync(entity, dbTransaction, ConnectionTimeout);
+            }
+            else
+            {
+                using (var conn = await this.CreateConnectionAsync())
+                {
+                    await conn.InsertAsync(entity, dbTransaction, ConnectionTimeout);
+                }
+            }
+            return true;
+        }
+        public async Task<bool> Insert<T>(IEnumerable<T> entities, IDbTransaction dbTransaction = null)
+        {
+            if (dbTransaction != null)
+            {
+                var connection = dbTransaction.Connection;
+                var result = await connection.InsertAsync(entities, dbTransaction, ConnectionTimeout); // Cần kiểm nghiệm
+                return result > 0;
+            }
+            else
+            {
+                using (var conn = await this.CreateConnectionAsync())
+                {
+                    var result = await conn.InsertAsync(entities, dbTransaction, ConnectionTimeout); // Cần kiểm nghiệm
+                    return result > 0;
+                }
+            }
+        }
         #endregion
 
         #region Update

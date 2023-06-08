@@ -24,8 +24,9 @@ namespace HUST.Core.Services
     public class TemplateService : BaseService, ITemplateService
     {
         #region Field
-        private readonly IDictionaryRepository _repository;
+        private readonly ICacheSqlUtil _cacheSql;
         private readonly StorageUtil _storage;
+        private readonly IDictionaryRepository _repository;
         private readonly IMailService _mailService;
         private readonly IUserConfigService _userConfigService;
 
@@ -34,14 +35,16 @@ namespace HUST.Core.Services
         #region Constructor
 
         public TemplateService(
-            IDictionaryRepository dictionaryRepository,
+            ICacheSqlUtil cacheSql,
             StorageUtil storage,
+            IDictionaryRepository dictionaryRepository,
             IMailService mailService,
             IUserConfigService userConfigService,
             IHustServiceCollection serviceCollection) : base(serviceCollection)
         {
-            _repository = dictionaryRepository;
+            _cacheSql = cacheSql;
             _storage = storage;
+            _repository = dictionaryRepository;
             _mailService = mailService;
             _userConfigService = userConfigService;
         }
@@ -193,17 +196,30 @@ namespace HUST.Core.Services
         public async Task<IServiceResult> ImportDictionary(string dictionaryId, IFormFile file)
         {
             var res = new ServiceResult();
-            if (string.IsNullOrEmpty(dictionaryId))
-            {
-                dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId()?.ToString();
-            }
-
             // Validate file
             if (file == null || Path.GetExtension(file.FileName) != FileExtension.Excel2007)
             {
                 return res.OnError(ErrorCode.Err9001, ErrorMessage.Err9001);
             }
 
+            // Kiểm tra từ điển tồn tại hay không
+            if (string.IsNullOrEmpty(dictionaryId))
+            {
+                dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId()?.ToString();
+            }
+
+            var dict = await _repository.SelectObject<Models.DTO.Dictionary>(new
+            {
+                dictionary_id = dictionaryId,
+                user_id = this.ServiceCollection.AuthUtil.GetCurrentUserId()
+            }) as Models.DTO.Dictionary;
+
+            if(dict == null)
+            {
+                return res.OnError(ErrorCode.Err2000, ErrorMessage.Err2000);
+            }
+
+            // Xử lý nhập khẩu
             using var stream = file.OpenReadStream();
             using var p = new ExcelPackage(stream);
 
@@ -214,11 +230,93 @@ namespace HUST.Core.Services
                 return res.OnError(ErrorCode.Err9001, ErrorMessage.Err9001);
             }
 
-            // TODO: Xử lý file
-            var wb = p.Workbook;
-            this.HandleImportData(ref wb, dictionaryId);
+            // Xử lý file
+            res.Data = await this.HandleImportData(p, dict.DictionaryId);
+            //res.Data = p.GetAsByteArray();
+            return res;
+        }
 
-            res.Data = p.GetAsByteArray();
+        /// <summary>
+        /// Lưu dữ liệu nhập khẩu
+        /// </summary>
+        /// <param name="importSession"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> DoImport(string importSession)
+        {
+            var res = new ServiceResult();
+
+            // Kiểm tra cache
+            var cacheData = await _cacheSql.GetCache(importSession);
+            if(string.IsNullOrEmpty(cacheData))
+            {
+                return res.OnError(ErrorCode.Err9004, ErrorMessage.Err9004);
+            }
+
+            var importData = SerializeUtil.DeserializeObject<CacheImportResult>(cacheData);
+
+            // Kiểm tra dictionary
+            var dict = await _repository.SelectObject<Dictionary>(new Dictionary<string, object>
+            {
+                { nameof(dictionary.dictionary_id), importData.DictionaryId },
+                { nameof(dictionary.user_id), this.ServiceCollection.AuthUtil.GetCurrentUserId() }
+            }) as Dictionary;
+            if (dict == null)
+            {
+                return res.OnError(ErrorCode.Err2000, ErrorMessage.Err2000);
+            }
+
+            var lstConcept = this.ServiceCollection.Mapper.Map<List<concept>>(importData.ListConcept);
+            var lstConceptRel = this.ServiceCollection.Mapper.Map<List<concept_relationship>>(importData.ListConceptRelationship);
+            var lstExample = this.ServiceCollection.Mapper.Map<List<example>>(importData.ListExample);
+            var lstExampleRel = this.ServiceCollection.Mapper.Map<List<example_relationship>>(importData.ListExampleRelationship);
+            // Transaction save dữ liệu nhập khẩu
+            using (var connection = await _repository.CreateConnectionAsync())
+            {
+                using (var transaction = connection.BeginTransaction())
+                {
+                    var result = true;
+
+                    // Xóa trắng data từ điển
+                    result = await _repository.DeleteDictionaryData(importData.DictionaryId, transaction);
+
+                    if (result)
+                    {
+                        result = await _repository.Insert<concept>(lstConcept, transaction);
+                    }
+
+                    if (result)
+                    {
+                        result = await _repository.Insert<example>(lstExample, transaction);
+                    }
+
+                    if (result)
+                    {
+                        result = await _repository.Insert<concept_relationship>(lstConceptRel, transaction);
+                    }
+
+                    if (result)
+                    {
+                        result = await _repository.Insert<example_relationship>(lstExampleRel, transaction);
+                    }
+
+                    if (result)
+                    {
+                        result = await _cacheSql.DeleteCache(importSession); // TODO: Thêm transaction
+                    }
+
+                    if (result)
+                    {
+                        transaction.Commit();
+                        res.OnSuccess(importData.NumberValidRecord);
+                    }
+                    else
+                    {
+                        transaction.Rollback();
+                        res.OnError(ErrorCode.Err9999);
+                    }
+                }
+            }
+
             return res;
         }
         #endregion
@@ -385,13 +483,12 @@ namespace HUST.Core.Services
         /// </summary>
         /// <param name="wb"></param>
         /// <returns></returns>
-        public void HandleImportData(ref ExcelWorkbook wb, string dictionaryId)
+        public async Task<TempImportResult> HandleImportData(ExcelPackage p, Guid dictionaryId)
         {
-            var sheets = wb.Worksheets;
+            var sheets = p.Workbook.Worksheets;
             var now = DateTime.Now;
-            var dictId = Guid.Parse(dictionaryId);
 
-            var configData = _userConfigService.GetAllConfigData().GetAwaiter().GetResult(); // Lấy dữ liệu config của user hiện tại
+            var configData = await _userConfigService.GetAllConfigData(); // Lấy dữ liệu config của user hiện tại
             var lstValidateError = new List<ValidateResultImport>();
 
             // Dữ liệu concept
@@ -420,7 +517,7 @@ namespace HUST.Core.Services
                     ConceptId = Guid.NewGuid(),
                     Title = row.Title,
                     Description = row.Description,
-                    DictionaryId = dictId,
+                    DictionaryId = dictionaryId,
                     CreatedDate = now
                 });
             }
@@ -455,7 +552,7 @@ namespace HUST.Core.Services
                     ConceptId = findChildConcept.ConceptId,
                     ParentId = findParentConcept.ConceptId,
                     ConceptLinkId = findRelation.concept_link_id,
-                    DictionaryId = dictId,
+                    DictionaryId = dictionaryId,
                     CreatedDate = now
                 });
             }
@@ -487,6 +584,7 @@ namespace HUST.Core.Services
                     continue;
                 }
 
+                // TODO: validate trường hợp example chưa highlight từ nào => Có thể xử lý tự động chèn tag html vào 2 đấu
                 lstExample.Add(new Example
                 {
                     ExampleId = Guid.NewGuid(),
@@ -498,7 +596,7 @@ namespace HUST.Core.Services
                     NuanceId = string.IsNullOrEmpty(row.NuanceName) ? null : findNuance.nuance_id,
                     DialectId = string.IsNullOrEmpty(row.DialectName) ? null : findDialect.dialect_id,
                     Note = row.Note,
-                    DictionaryId = dictId,
+                    DictionaryId = dictionaryId,
                     CreatedDate = now
                 });
             }
@@ -533,10 +631,47 @@ namespace HUST.Core.Services
                     ConceptId = findConcept.ConceptId,
                     ExampleId = findExample.ExampleId,
                     ExampleLinkId = findRelation.example_link_id,
-                    DictionaryId = dictId,
+                    DictionaryId = dictionaryId,
                     CreatedDate = now
                 });
             }
+
+            // Lưu dữ liệu hợp lệ vào cache sql
+            var numberValidRecord = lstConcept.Count + lstConceptRel.Count + lstExample.Count + lstExampleRel.Count;
+            var importSession = $"{Guid.NewGuid()}_{dictionaryId}";
+            if (numberValidRecord > 0)
+            {
+                var cacheData = new CacheImportResult
+                {
+                    DictionaryId = dictionaryId,
+                    NumberValidRecord = numberValidRecord,
+                    ListConcept = lstConcept,
+                    ListExample = lstExample,
+                    ListConceptRelationship = lstConceptRel,
+                    ListExampleRelationship = lstExampleRel
+                };
+
+                // Xóa cache import cũ
+                await _cacheSql.DeleteCache(new 
+                { 
+                    user_id = this.ServiceCollection.AuthUtil.GetCurrentUserId(),
+                    cache_type = (int)CacheSqlType.ImportDictionary
+                });
+
+                // Thêm cache mới
+                await _cacheSql.SetCache(importSession, SerializeUtil.SerializeObject(cacheData), (int)CacheSqlType.ImportDictionary);
+            }
+            
+            var res = new TempImportResult
+            {
+                ImportSession = importSession,
+                NumberValid = numberValidRecord,
+                NumberError = lstValidateError.Count,
+                ListValidateError = lstValidateError,
+                StrFileError = lstValidateError.Count > 0 ? Convert.ToBase64String(p.GetAsByteArray()) : null
+            };
+
+            return res;
         }
 
         /// <summary>

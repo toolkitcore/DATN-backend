@@ -36,14 +36,4 @@ namespace HUST.Core.Constants
         public const string Database = "Database";
     }
 
-    /// <summary>
-    /// Hằng key cache
-    /// </summary>
-    public static class CacheKey
-    {
-        public const string HustInstanceCache = "Hust";
-
-        public const string SessionCacheKey = "session_{0}";
-    }
-
 }

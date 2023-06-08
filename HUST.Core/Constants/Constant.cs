@@ -47,6 +47,16 @@ namespace HUST.Core.Constants
     }
 
     /// <summary>
+    /// Hằng key cache
+    /// </summary>
+    public static class CacheKey
+    {
+        public const string HustInstanceCache = "Hust";
+
+        public const string SessionCacheKey = "session_{0}";
+    }
+
+    /// <summary>
     /// Giá trị xác định trước độ mạnh của liên kết
     /// </summary>
     public static class LinkStrength

@@ -44,11 +44,18 @@ namespace HUST.Core.Interfaces.Service
         string GetExportFileName(string dictionaryName, DateTime? dateTime = null);
 
         /// <summary>
-        /// Nhập khẩu
+        /// Nhập khẩu và validate (bước đầu)
         /// </summary>
         /// <param name="dictionaryId"></param>
         /// <param name="file"></param>
         /// <returns></returns>
         Task<IServiceResult> ImportDictionary(string dictionaryId, IFormFile file);
+
+        /// <summary>
+        /// Lưu dữ liệu nhập khẩu
+        /// </summary>
+        /// <param name="importSession"></param>
+        /// <returns></returns>
+        Task<IServiceResult> DoImport(string importSession);
     }
 }

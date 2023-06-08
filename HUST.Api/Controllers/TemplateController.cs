@@ -113,11 +113,11 @@ namespace HUST.Api.Controllers
         }
 
         /// <summary>
-        /// Nhập khẩu
+        /// Nhập khẩu bước 1 (validate) 
         /// </summary>
         /// <returns></returns>
         [HttpPost("import")]
-        public async Task<IActionResult> ImportDictionary()
+        public async Task<IServiceResult> ImportDictionary()
         {
             var res = new ServiceResult();
             try
@@ -125,14 +125,34 @@ namespace HUST.Api.Controllers
                 var file = HttpContext.Request.Form.Files[0];
                 var dictionaryId = HttpContext.Request.Form["dictionaryId"].ToString();
 
-                var data =  (await _service.ImportDictionary(dictionaryId, file)).Data as byte[];
-                return File(data, FileContentType.Excel, "File error.xlsx");
+                //var data =  (await _service.ImportDictionary(dictionaryId, file)).Data as byte[];
+                //return File(data, FileContentType.Excel, "File error.xlsx");
+                return await _service.ImportDictionary(dictionaryId, file);
             }
             catch (Exception ex)
             {
                 this.ServiceCollection.HandleControllerException(res, ex);
             }
-            return Ok();
+            return res;
+        }
+
+        /// <summary>
+        /// Nhập khẩu (lưu dữ liệu)
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("do_import")]
+        public async Task<IServiceResult> DoImportDictionary([FromBody]string importSession)
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.DoImport(importSession);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+            return res;
         }
     }
 }

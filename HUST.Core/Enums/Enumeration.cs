@@ -11,6 +11,14 @@
     }
 
     /// <summary>
+    /// Loại cache
+    /// </summary>
+    public enum CacheSqlType
+    {
+        ImportDictionary = 1
+    }
+
+    /// <summary>
     /// Trạng thái tài khoản người dùng
     /// </summary>
     public enum UserStatus

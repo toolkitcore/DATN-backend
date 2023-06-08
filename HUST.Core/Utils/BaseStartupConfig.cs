@@ -32,7 +32,8 @@ namespace HUST.Core.Utils
                     options.SerializerSettings.ReferenceLoopHandling = SerializeUtil.JSONReferenceLoopHandling;
                     options.SerializerSettings.ContractResolver = null;
                 });
-            // Cache
+
+            // Cache mem
             services.AddMemoryCache();
 
             // Cache redis
@@ -50,7 +51,14 @@ namespace HUST.Core.Utils
                 services.AddDistributedMemoryCache();
             }
             services.AddTransient<IDistributedCacheUtil, DistributedCacheUtil>();
+
+            // Cache sql
+            services.AddTransient<ICacheSqlUtil, CacheSqlUtil>();
+
+            // Session service
             services.AddSingleton<ISessionService, SessionService>();
+
+            // Storage
             services.AddScoped<StorageUtil>();
 
             // Đăng nhập bằng jwt
@@ -59,6 +67,7 @@ namespace HUST.Core.Utils
             // Add send mail service
             services.Configure<MailSettings>(configuration.GetSection(AppSettingKey.MailSettingsSection));
             services.AddTransient<IMailService, MailService>();
+
 
             // Inject service mapper, auth, cache
             services.UseAutoMapper();

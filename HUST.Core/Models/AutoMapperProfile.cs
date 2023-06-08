@@ -125,6 +125,9 @@ namespace HUST.Core.Models
             CreateMap<view_example, ExampleImport>();
             CreateMap<view_concept_relationship, ConceptRelationshipImport>();
             CreateMap<view_example_relationship, ExampleRelationshipImport>();
+
+            CreateMap<cache_sql, CacheSql>();
+            CreateMap<cache_sql, CacheSql>().ReverseMap();
             #endregion
         }
 
