@@ -63,14 +63,14 @@ namespace HUST.Core.Utils.Extensions
                             return;
                         }
 
-                        col.Property.SetValue(tnew, val.GetValue<string>());
+                        col.Property.SetValue(tnew, val.GetValue<string>()?.Trim());
                     });
 
                     return tnew;
                 });
 
 
-            return collection.Where(x => columns.Any(c => c.Property.GetValue(x) != null));
+            return collection.Where(x => columns.Any(c => c.Property.GetValue(x) != null && c.Property.GetValue(x)?.ToString() != string.Empty));
         }
     }
 }

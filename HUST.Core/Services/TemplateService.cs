@@ -6,6 +6,7 @@ using HUST.Core.Models.DTO;
 using HUST.Core.Models.Entity;
 using HUST.Core.Models.ServerObject;
 using HUST.Core.Utils;
+using HUST.Core.Utils.Extensions;
 using Microsoft.AspNetCore.Http;
 using OfficeOpenXml;
 using System;
@@ -397,58 +398,41 @@ namespace HUST.Core.Services
 
             // Dữ liệu concept
             var ws = sheets[TemplateConfig.WorksheetName.Concept];
+            var errorColIndex = TemplateConfig.ConceptSheet.Error;
+            var errorColName = FunctionUtil.GetExcelColumnName(errorColIndex);
             ws.Cells.Style.Font.Color.SetColor(Color.Black);
-            ws.Cells["D:D"].Clear();
-            var rowCount = ws.Dimension.Rows;
+            ws.Cells[$"{errorColName}:{errorColName}"].Clear();
+
             var lstConcept = new List<Concept>();
+            var conceptRows = ws.ConvertSheetToObjects<ConceptImport>().ToList();
 
-            //var data = ws.Cells["B2:E9999"].ToCollectionWithMappings(row =>
-            //{
-            //    return new ConceptImport
-            //    {
-            //        Title = row.GetValue<string>(1),
-            //        Description = row.GetValue<string>(2),
-            //    };
-            //});
-
-            //var data1 = ws.ConvertSheetToObjects<ConceptImport>().ToList();
-
-            for (var rowIdx = TemplateConfig.StartRowData; rowIdx < rowCount; ++rowIdx)
+            foreach(var row in conceptRows)
             {
-                // Data
-                var title = ws.Cells[rowIdx, TemplateConfig.ConceptSheet.Title].Value?.ToString()?.Trim();
-                var description = ws.Cells[rowIdx, TemplateConfig.ConceptSheet.Description].Value?.ToString()?.Trim();
-
-                if(string.IsNullOrEmpty(title) && string.IsNullOrEmpty(description))
-                {
-                    continue;
-                }
-
                 // Validate
                 var valid = true;
                 var err = new ValidateResultImport
                 {
                     SheetIndex = ws.Index,
                     SheetName = ws.Name,
-                    Row = rowIdx,
+                    Row = row.RowIndex,
                     ListErrorMessage = new List<string>()
                 };
-                if (string.IsNullOrEmpty(title))
+                if (string.IsNullOrEmpty(row.Title))
                 {
                     valid = false;
-                    err.ListErrorMessage.Add("Title cannot be empty");
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Title"));
                 }
 
-                if (lstConcept.Any(x => x.Title == title))
+                if (lstConcept.Any(x => x.Title == row.Title))
                 {
                     valid = false;
-                    err.ListErrorMessage.Add("Title is duplicated");
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Duplicated, "Title"));
                 }
 
                 if(!valid)
                 {
-                    ws.Row(rowIdx).Style.Font.Color.SetColor(Color.Red);
-                    ws.Cells[rowIdx, 4].Value = err.ErrorMessage;
+                    ws.Row(row.RowIndex).Style.Font.Color.SetColor(Color.Red);
+                    ws.Cells[row.RowIndex, errorColIndex].Value = err.ErrorMessage;
                     lstValidateResult.Add(err);
                     continue;
                 }
@@ -456,8 +440,8 @@ namespace HUST.Core.Services
                 lstConcept.Add(new Concept
                 {
                     ConceptId = Guid.NewGuid(),
-                    Title = title,
-                    Description = description,
+                    Title = row.Title,
+                    Description = row.Description,
                     DictionaryId = dictId,
                     CreatedDate = now
                 });
@@ -466,91 +450,84 @@ namespace HUST.Core.Services
 
             // Dữ liệu concept relationship
             ws = sheets[TemplateConfig.WorksheetName.ConceptRelationship];
+            errorColIndex = TemplateConfig.ConceptRelationshipSheet.Error;
+            errorColName = FunctionUtil.GetExcelColumnName(errorColIndex);
             ws.Cells.Style.Font.Color.SetColor(Color.Black);
-            ws.Cells["E:E"].Clear();
-            rowCount = ws.Dimension.Rows;
+            ws.Cells[$"{errorColName}:{errorColName}"].Clear();
+
             var lstConceptRel = new List<ConceptRelationship>();
-            for (var rowIdx = TemplateConfig.StartRowData; rowIdx < rowCount; ++rowIdx)
+            var conceptRelRows = ws.ConvertSheetToObjects<ConceptRelationshipImport>().ToList();
+            foreach(var row in conceptRelRows)
             {
-                // Data
-                var childConcept = ws.Cells[rowIdx, TemplateConfig.ConceptRelationshipSheet.ChildConcept].Value?.ToString()?.Trim();
-                var parentConcept = ws.Cells[rowIdx, TemplateConfig.ConceptRelationshipSheet.ParentConcept].Value?.ToString()?.Trim();
-                var relation = ws.Cells[rowIdx, TemplateConfig.ConceptRelationshipSheet.Relation].Value?.ToString()?.Trim();
-
-                if (string.IsNullOrEmpty(childConcept) && string.IsNullOrEmpty(parentConcept) && string.IsNullOrEmpty(relation))
-                {
-                    continue;
-                }
-
                 // Validate
                 var valid = true;
                 var err = new ValidateResultImport
                 {
                     SheetIndex = ws.Index,
                     SheetName = ws.Name,
-                    Row = rowIdx,
+                    Row = row.RowIndex,
                     ListErrorMessage = new List<string>()
                 };
 
-                var findChildConcept = lstConcept.Find(x => x.Title == childConcept);
-                var findParentConcept = lstConcept.Find(x => x.Title == parentConcept);
-                var findRelation = configData.ListConceptLink.Find(x => x.concept_link_name == relation);
+                var findChildConcept = lstConcept.Find(x => x.Title == row.ChildName);
+                var findParentConcept = lstConcept.Find(x => x.Title == row.ParentName);
+                var findRelation = configData.ListConceptLink.Find(x => x.concept_link_name == row.ConceptLinkName);
 
-                if (string.IsNullOrEmpty(childConcept))
+                if (string.IsNullOrEmpty(row.ChildName))
                 {
                     valid = false;
-                    err.ListErrorMessage.Add("Child concept cannot be empty");
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Child concept"));
                 } 
                 else if (findChildConcept == null)
                 {
                     valid = false;
-                    err.ListErrorMessage.Add("Child concept does not exists");
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Child concept"));
                 }
 
-                if (string.IsNullOrEmpty(parentConcept))
+                if (string.IsNullOrEmpty(row.ParentName))
                 {
                     valid = false;
-                    err.ListErrorMessage.Add("Parent concept cannot be empty");
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Parent concept"));
                 }
                 else if (findParentConcept == null)
                 {
                     valid = false;
-                    err.ListErrorMessage.Add("Parent concept does not exists");
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Parent concept"));
                 }
 
-                if(!string.IsNullOrEmpty(childConcept) && !string.IsNullOrEmpty(parentConcept) && childConcept == parentConcept)
+                if(!string.IsNullOrEmpty(row.ChildName) && !string.IsNullOrEmpty(row.ParentName) && row.ChildName == row.ParentName)
                 {
                     valid = false;
-                    err.ListErrorMessage.Add("A concept can't link to itself");
+                    err.ListErrorMessage.Add(ImportValidateErrorMessage.ConceptLinkToItself);
                 }
 
-                if (string.IsNullOrEmpty(relation))
+                if (string.IsNullOrEmpty(row.ConceptLinkName))
                 {
                     valid = false;
-                    err.ListErrorMessage.Add("Relation cannot be empty");
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Relation"));
                 }
                 else if (findRelation == null)
                 {
                     valid = false;
-                    err.ListErrorMessage.Add("Relation does not exists");
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Relation"));
                 }
 
                 if(lstConceptRel.Any(x => x.ConceptId == findChildConcept.ConceptId && x.ParentId == findParentConcept.ConceptId))
                 {
                     valid = false;
-                    err.ListErrorMessage.Add("Row is duplicated");
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Duplicated, "Row"));
                 }
                 
                 if (lstConceptRel.Any(x => x.ConceptId == findParentConcept.ConceptId && x.ParentId == findChildConcept.ConceptId))
                 {
                     valid = false;
-                    err.ListErrorMessage.Add("Circle link");
+                    err.ListErrorMessage.Add(ImportValidateErrorMessage.ConceptCircleLink);
                 }
 
                 if (!valid)
                 {
-                    ws.Row(rowIdx).Style.Font.Color.SetColor(Color.Red);
-                    ws.Cells[rowIdx, 5].Value = err.ErrorMessage;
+                    ws.Row(row.RowIndex).Style.Font.Color.SetColor(Color.Red);
+                    ws.Cells[row.RowIndex, errorColIndex].Value = err.ErrorMessage;
                     lstValidateResult.Add(err);
                     continue;
                 }
@@ -567,10 +544,179 @@ namespace HUST.Core.Services
 
 
             // Dữ liệu example
-            var exampleWs = sheets[TemplateConfig.WorksheetName.Example];
+            ws = sheets[TemplateConfig.WorksheetName.Example];
+            errorColIndex = TemplateConfig.ExampleSheet.Error;
+            errorColName = FunctionUtil.GetExcelColumnName(errorColIndex);
+            ws.Cells.Style.Font.Color.SetColor(Color.Black);
+            ws.Cells[$"{errorColName}:{errorColName}"].Clear();
+
+            var lstExample = new List<Example>();
+            var exampleRows = ws.ConvertSheetToObjects<ExampleImport>().ToList();
+            foreach (var row in exampleRows)
+            {
+                // Validate
+                var valid = true;
+                var err = new ValidateResultImport
+                {
+                    SheetIndex = ws.Index,
+                    SheetName = ws.Name,
+                    Row = row.RowIndex,
+                    ListErrorMessage = new List<string>()
+                };
+
+                var findTone = configData.ListTone.Find(x => x.tone_name == row.ToneName);
+                var findMode = configData.ListMode.Find(x => x.mode_name == row.ModeName);
+                var findRegister = configData.ListRegister.Find(x => x.register_name == row.RegisterName);
+                var findNuance = configData.ListNuance.Find(x => x.nuance_name == row.NuanceName);
+                var findDialect = configData.ListDialect.Find(x => x.dialect_name == row.DialectName);
+
+                if (string.IsNullOrEmpty(row.DetailHtml))
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Example"));
+                }
+
+                if (lstExample.Any(x => x.DetailHtml == row.DetailHtml))
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Duplicated, "Example"));
+                }
+
+                if (!string.IsNullOrEmpty(row.ToneName) && findTone == null)
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Tone"));
+                }
+
+                if (!string.IsNullOrEmpty(row.ModeName) && findMode == null)
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Mode"));
+                }
+
+                if (!string.IsNullOrEmpty(row.RegisterName) && findRegister == null)
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Register"));
+                }
+
+                if (!string.IsNullOrEmpty(row.NuanceName) && findNuance == null)
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Nuance"));
+                }
+
+                if (!string.IsNullOrEmpty(row.DialectName) && findDialect == null)
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Dialect"));
+                }
+
+                if (!valid)
+                {
+                    ws.Row(row.RowIndex).Style.Font.Color.SetColor(Color.Red);
+                    ws.Cells[row.RowIndex, errorColIndex].Value = err.ErrorMessage;
+                    lstValidateResult.Add(err);
+                    continue;
+                }
+
+                lstExample.Add(new Example
+                {
+                    ExampleId = Guid.NewGuid(),
+                    Detail = FunctionUtil.StripHtml(row.DetailHtml),
+                    DetailHtml = row.DetailHtml,
+                    ToneId = string.IsNullOrEmpty(row.ToneName) ? null : findTone.tone_id,
+                    ModeId = string.IsNullOrEmpty(row.ModeName) ? null : findMode.mode_id,
+                    RegisterId = string.IsNullOrEmpty(row.RegisterName) ? null : findRegister.register_id,
+                    NuanceId = string.IsNullOrEmpty(row.NuanceName) ? null : findNuance.nuance_id,
+                    DialectId = string.IsNullOrEmpty(row.DialectName) ? null : findDialect.dialect_id,
+                    Note = row.Note,
+                    DictionaryId = dictId,
+                    CreatedDate = now
+                });
+            }
 
             // Dữ liệu example relationship
-            var exampleRelWs = sheets[TemplateConfig.WorksheetName.ExampleRelationship];
+            ws = sheets[TemplateConfig.WorksheetName.ExampleRelationship];
+            errorColIndex = TemplateConfig.ExampleRelationshipSheet.Error;
+            errorColName = FunctionUtil.GetExcelColumnName(errorColIndex);
+            ws.Cells.Style.Font.Color.SetColor(Color.Black);
+            ws.Cells[$"{errorColName}:{errorColName}"].Clear();
+
+            var lstExampleRel = new List<ExampleRelationship>();
+            var exampleRelRows = ws.ConvertSheetToObjects<ExampleRelationshipImport>().ToList();
+            foreach (var row in exampleRelRows)
+            {
+                // Validate
+                var valid = true;
+                var err = new ValidateResultImport
+                {
+                    SheetIndex = ws.Index,
+                    SheetName = ws.Name,
+                    Row = row.RowIndex,
+                    ListErrorMessage = new List<string>()
+                };
+
+                var findConcept = lstConcept.Find(x => x.Title == row.Concept);
+                var findExample = lstExample.Find(x => x.DetailHtml == row.ExampleHtml);
+                var findRelation = configData.ListExampleLink.Find(x => x.example_link_name == row.ExampleLinkName);
+
+                if (string.IsNullOrEmpty(row.Concept))
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Concept"));
+                }
+                else if (findConcept == null)
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Concept"));
+                }
+
+                if (string.IsNullOrEmpty(row.ExampleHtml))
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Example"));
+                }
+                else if (findExample == null)
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Example"));
+                }
+
+                if (string.IsNullOrEmpty(row.ExampleLinkName))
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Relation"));
+                }
+                else if (findRelation == null)
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Relation"));
+                }
+
+                if (lstExampleRel.Any(x => x.ConceptId == findConcept.ConceptId && x.ExampleId == findExample.ExampleId))
+                {
+                    valid = false;
+                    err.ListErrorMessage.Add("Row is duplicated");
+                }
+
+                if (!valid)
+                {
+                    ws.Row(row.RowIndex).Style.Font.Color.SetColor(Color.Red);
+                    ws.Cells[row.RowIndex, errorColIndex].Value = err.ErrorMessage;
+                    lstValidateResult.Add(err);
+                    continue;
+                }
+
+                lstExampleRel.Add(new ExampleRelationship
+                {
+                    ConceptId = findConcept.ConceptId,
+                    ExampleId = findExample.ExampleId,
+                    ExampleLinkId = findRelation.example_link_id,
+                    DictionaryId = dictId,
+                    CreatedDate = now
+                });
+            }
         }
         #endregion
     }

@@ -1,33 +1,31 @@
-﻿using Dapper.Contrib.Extensions;
-using OfficeOpenXml.Attributes;
-using System;
+﻿using HUST.Core.Constants;
 
 namespace HUST.Core.Models.ServerObject
 {
     /// <summary>
     /// Đối tượng xuất/nhập khẩu: map với view_example
     /// </summary>
-    public class ExampleImport
+    public class ExampleImport : BaseImport
     {
-        [EpplusTableColumn(Order = 1)]
+        [ImportColumn(TemplateConfig.ExampleSheet.Example)]
         public string DetailHtml { get; set; }
 
-        [EpplusTableColumn(Order = 2)]
+        [ImportColumn(TemplateConfig.ExampleSheet.Tone)]
         public string ToneName { get; set; }
 
-        [EpplusTableColumn(Order = 3)]
+        [ImportColumn(TemplateConfig.ExampleSheet.Mode)]
         public string ModeName { get; set; }
 
-        [EpplusTableColumn(Order = 4)]
+        [ImportColumn(TemplateConfig.ExampleSheet.Register)]
         public string RegisterName { get; set; }
 
-        [EpplusTableColumn(Order = 5)]
+        [ImportColumn(TemplateConfig.ExampleSheet.Nuance)]
         public string NuanceName { get; set; }
 
-        [EpplusTableColumn(Order = 6)]
+        [ImportColumn(TemplateConfig.ExampleSheet.Dialect)]
         public string DialectName { get; set; }
 
-        [EpplusTableColumn(Order = 7)]
+        [ImportColumn(TemplateConfig.ExampleSheet.Note)]
         public string Note { get; set; }
     }
 }

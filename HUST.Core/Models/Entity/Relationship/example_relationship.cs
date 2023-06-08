@@ -21,9 +21,9 @@ namespace HUST.Core.Models.Entity
         public Guid? dictionary_id { get; set; }
 
         /// <summary>
-        /// Id content
+        /// Id concept
         /// </summary>
-        public Guid? content_id { get; set; }
+        public Guid? concept_id { get; set; }
 
         /// <summary>
         /// Id example

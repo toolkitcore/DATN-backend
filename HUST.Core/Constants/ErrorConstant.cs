@@ -150,4 +150,16 @@ namespace HUST.Core.Constants
         public const string Err9003 = "This file type is not supported";
 
     }
+
+    /// <summary>
+    /// Thông báo lỗi validate nhập khẩu
+    /// </summary>
+    public static class ImportValidateErrorMessage
+    {
+        public const string Required = "{0} cannot be empty";
+        public const string NotExist = "{0} does not exists";
+        public const string Duplicated = "{0} is duplicated";
+        public const string ConceptLinkToItself = ErrorMessage.Err3003;
+        public const string ConceptCircleLink = ErrorMessage.Err3004;
+    }
 }

@@ -57,13 +57,6 @@ namespace HUST.Core.Constants
         /// </summary>
         public static class ConfigSheet
         {
-            //public const string ConceptLinkCellAddress = "B3";
-            //public const string ExampleLinkCellAddress = "D3";
-            //public const string ToneCellAddress = "F3";
-            //public const string ModeCellAddress = "H3";
-            //public const string RegisterCellAddress = "J3";
-            //public const string NuanceCellAddress = "L3";
-            //public const string DialectCellAddress = "N3";
             public const int ConceptLink = 2;
             public const int ExampleLink = 4;
             public const int Tone = 6;
@@ -80,6 +73,7 @@ namespace HUST.Core.Constants
         {
             public const int Title = 2; // A
             public const int Description = 3; // B
+            public const int Error = 4; // C
         }
 
         /// <summary>
@@ -94,6 +88,7 @@ namespace HUST.Core.Constants
             public const int Nuance = 6;
             public const int Dialect = 7;
             public const int Note = 8;
+            public const int Error = 9;
         }
 
         /// <summary>
@@ -104,6 +99,7 @@ namespace HUST.Core.Constants
             public const int ChildConcept = 2;
             public const int ParentConcept = 3;
             public const int Relation = 4;
+            public const int Error = 5;
         }
 
         /// <summary>
@@ -114,6 +110,7 @@ namespace HUST.Core.Constants
             public const int Example = 2;
             public const int Concept = 3;
             public const int Relation = 4;
+            public const int Error = 5;
         }
     }
 }

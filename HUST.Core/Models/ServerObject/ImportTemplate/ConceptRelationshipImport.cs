@@ -1,14 +1,11 @@
-﻿using Dapper.Contrib.Extensions;
-using HUST.Core.Constants;
-using OfficeOpenXml.Attributes;
-using System;
+﻿using HUST.Core.Constants;
 
 namespace HUST.Core.Models.ServerObject
 {
     /// <summary>
     /// Đối tượng xuất/nhập khẩu: map với view_concept_relationship
     /// </summary>
-    public class ConceptRelationshipImport
+    public class ConceptRelationshipImport : BaseImport
     {
         [ImportColumn(TemplateConfig.ConceptRelationshipSheet.ChildConcept)]
         public string ChildName { get; set; }

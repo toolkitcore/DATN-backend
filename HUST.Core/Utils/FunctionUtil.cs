@@ -235,5 +235,34 @@ namespace HUST.Core.Utils
             text = Regex.Replace(text, "[^0-9a-z ]", "");
             return text;
         }
+
+        /// <summary>
+        /// Lấy tên cột excel dựa trên chỉ số cột
+        /// </summary>
+        /// <param name="columnNumber"></param>
+        /// <returns></returns>
+        public static string GetExcelColumnName(int columnNumber)
+        {
+            string columnName = "";
+
+            while (columnNumber > 0)
+            {
+                int modulo = (columnNumber - 1) % 26;
+                columnName = Convert.ToChar('A' + modulo) + columnName;
+                columnNumber = (columnNumber - modulo) / 26;
+            }
+
+            return columnName;
+        }
+
+        /// <summary>
+        /// Loại bỏ thẻ html khỏi string
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static string StripHtml(string input)
+        {
+            return Regex.Replace(input, "<.*?>", String.Empty);
+        }
     }
 }
