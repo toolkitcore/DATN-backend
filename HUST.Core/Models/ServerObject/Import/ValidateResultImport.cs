@@ -11,6 +11,7 @@ namespace HUST.Core.Models.ServerObject
     /// </summary>
     public class ValidateResultImport
     {
+        public bool? IsValid { get; set; }
         public int SheetIndex { get; set; }
         public string SheetName { get; set; }
         public int Row { get; set; }

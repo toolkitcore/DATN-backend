@@ -392,48 +392,26 @@ namespace HUST.Core.Services
             var dictId = Guid.Parse(dictionaryId);
 
             var configData = _userConfigService.GetAllConfigData().GetAwaiter().GetResult(); // Lấy dữ liệu config của user hiện tại
-
-
-            var lstValidateResult = new List<ValidateResultImport>();
+            var lstValidateError = new List<ValidateResultImport>();
 
             // Dữ liệu concept
             var ws = sheets[TemplateConfig.WorksheetName.Concept];
             var errorColIndex = TemplateConfig.ConceptSheet.Error;
-            var errorColName = FunctionUtil.GetExcelColumnName(errorColIndex);
-            ws.Cells.Style.Font.Color.SetColor(Color.Black);
-            ws.Cells[$"{errorColName}:{errorColName}"].Clear();
+            this.ClearError(ref ws, errorColIndex);
 
             var lstConcept = new List<Concept>();
             var conceptRows = ws.ConvertSheetToObjects<ConceptImport>().ToList();
-
             foreach(var row in conceptRows)
             {
                 // Validate
-                var valid = true;
-                var err = new ValidateResultImport
-                {
-                    SheetIndex = ws.Index,
-                    SheetName = ws.Name,
-                    Row = row.RowIndex,
-                    ListErrorMessage = new List<string>()
-                };
-                if (string.IsNullOrEmpty(row.Title))
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Title"));
-                }
+                var validateRes = row.ValidateBusinessMater(lstConcept);
 
-                if (lstConcept.Any(x => x.Title == row.Title))
+                if(validateRes.IsValid != true)
                 {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Duplicated, "Title"));
-                }
-
-                if(!valid)
-                {
-                    ws.Row(row.RowIndex).Style.Font.Color.SetColor(Color.Red);
-                    ws.Cells[row.RowIndex, errorColIndex].Value = err.ErrorMessage;
-                    lstValidateResult.Add(err);
+                    validateRes.SheetIndex = ws.Index;
+                    validateRes.SheetName = ws.Name;
+                    this.SetErrorMessage(ref ws, row.RowIndex, errorColIndex, validateRes.ErrorMessage);
+                    lstValidateError.Add(validateRes);
                     continue;
                 }
 
@@ -447,88 +425,28 @@ namespace HUST.Core.Services
                 });
             }
 
-
             // Dữ liệu concept relationship
             ws = sheets[TemplateConfig.WorksheetName.ConceptRelationship];
             errorColIndex = TemplateConfig.ConceptRelationshipSheet.Error;
-            errorColName = FunctionUtil.GetExcelColumnName(errorColIndex);
-            ws.Cells.Style.Font.Color.SetColor(Color.Black);
-            ws.Cells[$"{errorColName}:{errorColName}"].Clear();
+            this.ClearError(ref ws, errorColIndex);
 
             var lstConceptRel = new List<ConceptRelationship>();
             var conceptRelRows = ws.ConvertSheetToObjects<ConceptRelationshipImport>().ToList();
             foreach(var row in conceptRelRows)
             {
                 // Validate
-                var valid = true;
-                var err = new ValidateResultImport
-                {
-                    SheetIndex = ws.Index,
-                    SheetName = ws.Name,
-                    Row = row.RowIndex,
-                    ListErrorMessage = new List<string>()
-                };
-
                 var findChildConcept = lstConcept.Find(x => x.Title == row.ChildName);
                 var findParentConcept = lstConcept.Find(x => x.Title == row.ParentName);
                 var findRelation = configData.ListConceptLink.Find(x => x.concept_link_name == row.ConceptLinkName);
 
-                if (string.IsNullOrEmpty(row.ChildName))
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Child concept"));
-                } 
-                else if (findChildConcept == null)
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Child concept"));
-                }
+                var validateRes = row.ValidateBusinessMater(lstConceptRel, findChildConcept, findParentConcept, findRelation);
 
-                if (string.IsNullOrEmpty(row.ParentName))
+                if (validateRes.IsValid != true)
                 {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Parent concept"));
-                }
-                else if (findParentConcept == null)
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Parent concept"));
-                }
-
-                if(!string.IsNullOrEmpty(row.ChildName) && !string.IsNullOrEmpty(row.ParentName) && row.ChildName == row.ParentName)
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(ImportValidateErrorMessage.ConceptLinkToItself);
-                }
-
-                if (string.IsNullOrEmpty(row.ConceptLinkName))
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Relation"));
-                }
-                else if (findRelation == null)
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Relation"));
-                }
-
-                if(lstConceptRel.Any(x => x.ConceptId == findChildConcept.ConceptId && x.ParentId == findParentConcept.ConceptId))
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Duplicated, "Row"));
-                }
-                
-                if (lstConceptRel.Any(x => x.ConceptId == findParentConcept.ConceptId && x.ParentId == findChildConcept.ConceptId))
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(ImportValidateErrorMessage.ConceptCircleLink);
-                }
-
-                if (!valid)
-                {
-                    ws.Row(row.RowIndex).Style.Font.Color.SetColor(Color.Red);
-                    ws.Cells[row.RowIndex, errorColIndex].Value = err.ErrorMessage;
-                    lstValidateResult.Add(err);
+                    validateRes.SheetIndex = ws.Index;
+                    validateRes.SheetName = ws.Name;
+                    this.SetErrorMessage(ref ws, row.RowIndex, errorColIndex, validateRes.ErrorMessage);
+                    lstValidateError.Add(validateRes);
                     continue;
                 }
 
@@ -542,81 +460,30 @@ namespace HUST.Core.Services
                 });
             }
 
-
             // Dữ liệu example
             ws = sheets[TemplateConfig.WorksheetName.Example];
             errorColIndex = TemplateConfig.ExampleSheet.Error;
-            errorColName = FunctionUtil.GetExcelColumnName(errorColIndex);
-            ws.Cells.Style.Font.Color.SetColor(Color.Black);
-            ws.Cells[$"{errorColName}:{errorColName}"].Clear();
+            this.ClearError(ref ws, errorColIndex);
 
             var lstExample = new List<Example>();
             var exampleRows = ws.ConvertSheetToObjects<ExampleImport>().ToList();
             foreach (var row in exampleRows)
             {
                 // Validate
-                var valid = true;
-                var err = new ValidateResultImport
-                {
-                    SheetIndex = ws.Index,
-                    SheetName = ws.Name,
-                    Row = row.RowIndex,
-                    ListErrorMessage = new List<string>()
-                };
-
                 var findTone = configData.ListTone.Find(x => x.tone_name == row.ToneName);
                 var findMode = configData.ListMode.Find(x => x.mode_name == row.ModeName);
                 var findRegister = configData.ListRegister.Find(x => x.register_name == row.RegisterName);
                 var findNuance = configData.ListNuance.Find(x => x.nuance_name == row.NuanceName);
                 var findDialect = configData.ListDialect.Find(x => x.dialect_name == row.DialectName);
 
-                if (string.IsNullOrEmpty(row.DetailHtml))
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Example"));
-                }
+                var validateRes = row.ValidateBusinessMater(lstExample, findTone, findMode, findRegister, findNuance, findDialect);
 
-                if (lstExample.Any(x => x.DetailHtml == row.DetailHtml))
+                if (validateRes.IsValid != true)
                 {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Duplicated, "Example"));
-                }
-
-                if (!string.IsNullOrEmpty(row.ToneName) && findTone == null)
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Tone"));
-                }
-
-                if (!string.IsNullOrEmpty(row.ModeName) && findMode == null)
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Mode"));
-                }
-
-                if (!string.IsNullOrEmpty(row.RegisterName) && findRegister == null)
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Register"));
-                }
-
-                if (!string.IsNullOrEmpty(row.NuanceName) && findNuance == null)
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Nuance"));
-                }
-
-                if (!string.IsNullOrEmpty(row.DialectName) && findDialect == null)
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Dialect"));
-                }
-
-                if (!valid)
-                {
-                    ws.Row(row.RowIndex).Style.Font.Color.SetColor(Color.Red);
-                    ws.Cells[row.RowIndex, errorColIndex].Value = err.ErrorMessage;
-                    lstValidateResult.Add(err);
+                    validateRes.SheetIndex = ws.Index;
+                    validateRes.SheetName = ws.Name;
+                    this.SetErrorMessage(ref ws, row.RowIndex, errorColIndex, validateRes.ErrorMessage);
+                    lstValidateError.Add(validateRes);
                     continue;
                 }
 
@@ -639,72 +506,25 @@ namespace HUST.Core.Services
             // Dữ liệu example relationship
             ws = sheets[TemplateConfig.WorksheetName.ExampleRelationship];
             errorColIndex = TemplateConfig.ExampleRelationshipSheet.Error;
-            errorColName = FunctionUtil.GetExcelColumnName(errorColIndex);
-            ws.Cells.Style.Font.Color.SetColor(Color.Black);
-            ws.Cells[$"{errorColName}:{errorColName}"].Clear();
+            this.ClearError(ref ws, errorColIndex);
 
             var lstExampleRel = new List<ExampleRelationship>();
             var exampleRelRows = ws.ConvertSheetToObjects<ExampleRelationshipImport>().ToList();
             foreach (var row in exampleRelRows)
             {
                 // Validate
-                var valid = true;
-                var err = new ValidateResultImport
-                {
-                    SheetIndex = ws.Index,
-                    SheetName = ws.Name,
-                    Row = row.RowIndex,
-                    ListErrorMessage = new List<string>()
-                };
-
                 var findConcept = lstConcept.Find(x => x.Title == row.Concept);
                 var findExample = lstExample.Find(x => x.DetailHtml == row.ExampleHtml);
                 var findRelation = configData.ListExampleLink.Find(x => x.example_link_name == row.ExampleLinkName);
 
-                if (string.IsNullOrEmpty(row.Concept))
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Concept"));
-                }
-                else if (findConcept == null)
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Concept"));
-                }
+                var validateRes = row.ValidateBusinessMater(lstExampleRel, findConcept, findExample, findRelation);
 
-                if (string.IsNullOrEmpty(row.ExampleHtml))
+                if (validateRes.IsValid != true)
                 {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Example"));
-                }
-                else if (findExample == null)
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Example"));
-                }
-
-                if (string.IsNullOrEmpty(row.ExampleLinkName))
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Relation"));
-                }
-                else if (findRelation == null)
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.NotExist, "Relation"));
-                }
-
-                if (lstExampleRel.Any(x => x.ConceptId == findConcept.ConceptId && x.ExampleId == findExample.ExampleId))
-                {
-                    valid = false;
-                    err.ListErrorMessage.Add("Row is duplicated");
-                }
-
-                if (!valid)
-                {
-                    ws.Row(row.RowIndex).Style.Font.Color.SetColor(Color.Red);
-                    ws.Cells[row.RowIndex, errorColIndex].Value = err.ErrorMessage;
-                    lstValidateResult.Add(err);
+                    validateRes.SheetIndex = ws.Index;
+                    validateRes.SheetName = ws.Name;
+                    this.SetErrorMessage(ref ws, row.RowIndex, errorColIndex, validateRes.ErrorMessage);
+                    lstValidateError.Add(validateRes);
                     continue;
                 }
 
@@ -717,6 +537,30 @@ namespace HUST.Core.Services
                     CreatedDate = now
                 });
             }
+        }
+
+        /// <summary>
+        /// Xóa bỏ style, giá trị lỗi của sheet (reset)
+        /// </summary>
+        /// <param name="ws"></param>
+        /// <param name="errorColIndex"></param>
+        public void ClearError(ref ExcelWorksheet ws, int errorColIndex) {
+            var errorColName = FunctionUtil.GetExcelColumnName(errorColIndex);
+            ws.Cells.Style.Font.Color.SetColor(Color.Black);
+            ws.Cells[$"{errorColName}:{errorColName}"].Clear();
+        }
+
+        /// <summary>
+        /// Thêm thông báo lỗi validate dòng nhập khẩu
+        /// </summary>
+        /// <param name="ws"></param>
+        /// <param name="rowIndex"></param>
+        /// <param name="errorColIndex"></param>
+        /// <param name="errorMessage"></param>
+        public void SetErrorMessage(ref ExcelWorksheet ws, int rowIndex, int errorColIndex, string errorMessage)
+        {
+            ws.Row(rowIndex).Style.Font.Color.SetColor(Color.Red);
+            ws.Cells[rowIndex, errorColIndex].Value = errorMessage;
         }
         #endregion
     }
