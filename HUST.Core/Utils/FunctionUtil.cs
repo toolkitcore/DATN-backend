@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using HUST.Core.Constants;
 using System.Net.Http;
 using Microsoft.AspNetCore.Http;
+using System.Text.RegularExpressions;
 
 namespace HUST.Core.Utils
 {
@@ -217,6 +218,51 @@ namespace HUST.Core.Utils
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Chuẩn hóa từ
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static string NormalizeText(string text)
+        {
+            if(string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+            text = text.Trim().ToLower();
+            text = Regex.Replace(text, "[^0-9a-z ]", "");
+            return text;
+        }
+
+        /// <summary>
+        /// Lấy tên cột excel dựa trên chỉ số cột
+        /// </summary>
+        /// <param name="columnNumber"></param>
+        /// <returns></returns>
+        public static string GetExcelColumnName(int columnNumber)
+        {
+            string columnName = "";
+
+            while (columnNumber > 0)
+            {
+                int modulo = (columnNumber - 1) % 26;
+                columnName = Convert.ToChar('A' + modulo) + columnName;
+                columnNumber = (columnNumber - modulo) / 26;
+            }
+
+            return columnName;
+        }
+
+        /// <summary>
+        /// Loại bỏ thẻ html khỏi string
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static string StripHtml(string input)
+        {
+            return Regex.Replace(input, "<.*?>", String.Empty);
         }
     }
 }

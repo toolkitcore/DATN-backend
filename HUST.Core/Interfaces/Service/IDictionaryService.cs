@@ -13,6 +13,13 @@ namespace HUST.Core.Interfaces.Service
     public interface IDictionaryService
     {
         /// <summary>
+        /// Lấy thông tin từ điển theo id
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        Task<IServiceResult> GetDictionaryById(string dictionaryId);
+
+        /// <summary>
         /// Lấy danh sách từ điển đã tạo của người dùng
         /// </summary>
         /// <returns></returns>
@@ -70,12 +77,5 @@ namespace HUST.Core.Interfaces.Service
         /// <param name="dictionaryId"></param>
         /// <returns></returns>
         Task<IServiceResult> GetNumberRecord(Guid dictionaryId);
-
-        /// <summary>
-        /// Lấy template nhập khẩu
-        /// </summary>
-        /// <returns></returns>
-        Task<byte[]> DowloadTemplateImportDictionary();
-
     }
 }

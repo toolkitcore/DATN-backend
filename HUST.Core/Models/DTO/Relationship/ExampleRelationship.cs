@@ -20,9 +20,9 @@ namespace HUST.Core.Models.DTO
         public Guid? DictionaryId { get; set; }
 
         /// <summary>
-        /// Id content
+        /// Id concept
         /// </summary>
-        public Guid? ContentId { get; set; }
+        public Guid? ConceptId { get; set; }
 
         /// <summary>
         /// Id example

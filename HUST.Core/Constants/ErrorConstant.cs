@@ -113,6 +113,11 @@ namespace HUST.Core.Constants
         public const int Err9003 = 9003;
 
         /// <summary>
+        /// Import session does not exist or has expired
+        /// </summary>
+        public const int Err9004 = 9004;
+
+        /// <summary>
         /// General error
         /// </summary>
         public const int Err9999 = 9999;
@@ -148,6 +153,18 @@ namespace HUST.Core.Constants
         public const string Err9001 = "Invalid file upload";
         public const string Err9002 = "This file is too large";
         public const string Err9003 = "This file type is not supported";
+        public const string Err9004 = "Import session does not exist or has expired";
+    }
 
+    /// <summary>
+    /// Thông báo lỗi validate nhập khẩu
+    /// </summary>
+    public static class ImportValidateErrorMessage
+    {
+        public const string Required = "{0} cannot be empty";
+        public const string NotExist = "{0} does not exists";
+        public const string Duplicated = "{0} is duplicated";
+        public const string ConceptLinkToItself = ErrorMessage.Err3003;
+        public const string ConceptCircleLink = ErrorMessage.Err3004;
     }
 }

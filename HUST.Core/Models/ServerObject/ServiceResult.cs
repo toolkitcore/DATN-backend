@@ -1,4 +1,5 @@
-﻿using HUST.Core.Enums;
+﻿using HUST.Core.Constants;
+using HUST.Core.Enums;
 using System;
 
 namespace HUST.Core.Models.ServerObject
@@ -25,6 +26,11 @@ namespace HUST.Core.Models.ServerObject
         public string Message { get; set; }
 
         /// <summary>
+        /// Thông báo cho dev
+        /// </summary>
+        public string DevMessage { get; set; }
+
+        /// <summary>
         /// Mã lỗi (string)
         /// </summary>
         public string Code { get; set; }
@@ -36,6 +42,10 @@ namespace HUST.Core.Models.ServerObject
         #endregion
 
         #region Constructors
+
+        #endregion
+
+        #region Methods
 
         public IServiceResult OnSuccess(object data = null, string message = null)
         {
@@ -58,7 +68,12 @@ namespace HUST.Core.Models.ServerObject
         public IServiceResult OnException(Exception exception, string message = null)
         {
             this.Status = ServiceResultStatus.Exception;
-            this.Message = $"{this.Message} {exception.Message}";
+
+            if(GlobalConfig.IsDevelopment)
+            {
+                this.DevMessage = $"{this.Message} {exception.Message}";
+            }
+            
             return this;
         }
         #endregion

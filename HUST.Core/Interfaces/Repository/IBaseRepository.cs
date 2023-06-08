@@ -75,6 +75,9 @@ namespace HUST.Core.Interfaces.Repository
         /// <param name="entities">Danh sách bản ghi thêm mới</param>
         /// <returns>Kết quả thực hiện</returns>
         Task<bool> Insert(IEnumerable<TEntity> entities);
+
+        Task<bool> Insert<T>(T entity, IDbTransaction dbTransaction = null) where T : class;
+        Task<bool> Insert<T>(IEnumerable<T> entities, IDbTransaction dbTransaction = null);
         #endregion
 
         #region Update

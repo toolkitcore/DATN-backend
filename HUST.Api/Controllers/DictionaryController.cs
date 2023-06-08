@@ -27,6 +27,27 @@ namespace HUST.Api.Controllers
         #endregion
 
         /// <summary>
+        /// Lấy từ điển theo id
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <returns></returns>
+        [HttpGet("get_dictionary_by_id")]
+        public async Task<IServiceResult> GetDictionaryById(string dictionaryId)
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.GetDictionaryById(dictionaryId);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
+
+        /// <summary>
         /// Lấy danh sách từ điển đã tạo của người dùng
         /// </summary>
         /// <returns></returns>
@@ -199,63 +220,5 @@ namespace HUST.Api.Controllers
 
             return res;
         }
-
-        /// <summary>
-        /// Lấy template nhập khẩu
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("download_template_import_dictionary")]
-        public async Task<IActionResult> DownloadTemplateImportDictionary()
-        {
-            var res = new ServiceResult();
-            try
-            {
-                var fileBytes = await _service.DowloadTemplateImportDictionary();
-                if(fileBytes == null || fileBytes.Length == 0)
-                {
-                    return StatusCode((int)HttpStatusCode.NoContent);
-                }
-                return File(fileBytes, FileContentType.OctetStream, FileDefaultName.DownloadDefaultTemplate);
-            }
-            catch (Exception ex)
-            {
-                this.ServiceCollection.HandleControllerException(res, ex);
-                return StatusCode((int)HttpStatusCode.InternalServerError, res);
-            }
-        }
-
-        /// <summary>
-        /// Lấy template nhập khẩu (test)
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("download_template_test")]
-        public async Task<IActionResult> DowloadTemplateTest()
-        {
-            IServiceResult res = new ServiceResult();
-            try
-            {
-                var stream = new MemoryStream();
-                using (var package = new ExcelPackage(stream))
-                {
-                    var workSheet = package.Workbook.Worksheets.Add("SheetTest");
-                    package.Save();
-                }
-                stream.Position = 0;
-                string excelName = $"Test.xlsx";
-                return File(stream, "application/octet-stream", excelName);
-
-                //stream.Position = 0;
-                //string excelName = $"Template-{DateTime.Now.ToString("yyyyMMddHHmmssfff")}.xlsx";
-                //return File(stream, "application/octet-stream", excelName);
-                //return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelName);
-            }
-            catch (Exception ex)
-            {
-                this.ServiceCollection.HandleControllerException(res, ex);
-            }
-
-            return null;
-        }
-
     }
 }

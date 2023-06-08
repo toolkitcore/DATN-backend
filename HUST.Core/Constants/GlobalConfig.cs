@@ -11,6 +11,10 @@ namespace HUST.Core.Constants
     /// </summary>
     public static class GlobalConfig
     {
+        public static string Environment = null;
+        public static bool IsDevelopment = false;
+        public static string ContentRootPath = "";
+
         public static readonly int ConnectionTimeout = 999;
 
         public static readonly string[] ModelNamespace =

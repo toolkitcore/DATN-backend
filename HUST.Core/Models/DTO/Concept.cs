@@ -28,5 +28,15 @@ namespace HUST.Core.Models.DTO
         /// Mô tả/định nghĩa
         /// </summary>
         public string Description { get; set; }
+
+        /// <summary>
+        /// Title được chuẩn hóa
+        /// </summary>
+        public string NormalizedTitle { get; set; }
+
+        /// <summary>
+        /// Giá trị soundex của title
+        /// </summary>
+        public string SoundexTitle { get; set; }
     }
 }

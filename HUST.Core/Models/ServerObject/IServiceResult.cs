@@ -25,6 +25,11 @@ namespace HUST.Core.Models.ServerObject
         public string Message { get; set; }
 
         /// <summary>
+        /// Thông báo cho dev
+        /// </summary>
+        public string DevMessage { get; set; }
+
+        /// <summary>
         /// Mã lỗi (string)
         /// </summary>
         public string Code { get; set; }

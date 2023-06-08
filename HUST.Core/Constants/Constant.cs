@@ -7,6 +7,15 @@ using System.Threading.Tasks;
 namespace HUST.Core.Constants
 {
     /// <summary>
+    /// Extension của file
+    /// </summary>
+    public static class FileExtension
+    {
+        public const string Excel2007 = ".xlsx";
+        public static readonly string[] Image = {".png", ".jpeg", ".jpg"};
+    }
+
+    /// <summary>
     /// Loại dữ liệu của file
     /// </summary>
     public static class FileContentType
@@ -21,18 +30,6 @@ namespace HUST.Core.Constants
     }
 
     /// <summary>
-    /// Tên file mặc định
-    /// </summary>
-    public static class FileDefaultName
-    {
-        // Có thể có hoặc không dùng đuôi .xlsx
-        public const string DefaultTemplate = "default_template";
-        public const string DefaultTemplateProtect = "default_template_protect";
-
-        public const string DownloadDefaultTemplate = "HUST-PVO_ImportTemplate.xlsx";
-    }
-
-    /// <summary>
     /// Đường dẫn folder storage
     /// </summary>
     public static class StoragePath
@@ -42,51 +39,21 @@ namespace HUST.Core.Constants
     }
 
     /// <summary>
-    /// Tên sheet trong file mẫu nhập khẩu
+    /// Đường dẫn folder server
     /// </summary>
-    public static class ImportTemplateWorksheet
+    public static class ServerStoragePath
     {
-        public const string Config = "Config";
-        public const string Concept = "Concept";
-        public const string Example = "Example";
-        public const string ConceptRelationship = "Concept relationship";
-        public const string ExampleRelationship = "Example relationship";
+        public const string Import = "File/Import";
     }
 
     /// <summary>
-    /// Tên sheet trong file mẫu nhập khẩu
+    /// Hằng key cache
     /// </summary>
-    public static class ImportTemplateWorksheetStructure
+    public static class CacheKey
     {
-        public static class Config
-        {
-            public const string ConceptLinkCellAddress = "B3";
-            public const string ExampleLinkCellAddress = "D3";
-            public const string ToneCellAddress = "F3";
-            public const string ModeCellAddress = "H3";
-            public const string RegisterCellAddress = "J3";
-            public const string NuanceCellAddress = "L3";
-            public const string DialectCellAddress = "N3";
-        }
-        public static class Concept
-        {
+        public const string HustInstanceCache = "Hust";
 
-        }
-
-        public static class Example
-        {
-
-        }
-
-        public static class ConceptRelationship
-        {
-
-        }
-
-        public static class ExampleRelationship
-        {
-
-        }
+        public const string SessionCacheKey = "session_{0}";
     }
 
     /// <summary>

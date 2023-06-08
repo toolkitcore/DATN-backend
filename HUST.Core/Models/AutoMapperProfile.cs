@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using HUST.Core.Models.DTO;
 using HUST.Core.Models.Entity;
+using HUST.Core.Models.ServerObject;
 
 namespace HUST.Core.Models
 {
@@ -109,6 +110,24 @@ namespace HUST.Core.Models
             CreateMap<audit_log, AuditLog>();
             CreateMap<audit_log, AuditLog>().ReverseMap();
             //CreateMap<AuditLog, audit_log>().ReverseMap();
+
+            CreateMap<view_concept_relationship, ViewConceptRelationship>();
+            CreateMap<view_concept_relationship, ViewConceptRelationship>().ReverseMap();
+
+            CreateMap<view_example_relationship, ViewExampleRelationship>();
+            CreateMap<view_example_relationship, ViewExampleRelationship>().ReverseMap();
+
+            CreateMap<view_example, ViewExample>();
+            CreateMap<view_example, ViewExample>().ReverseMap();
+
+            // Import
+            CreateMap<concept, ConceptImport>();
+            CreateMap<view_example, ExampleImport>();
+            CreateMap<view_concept_relationship, ConceptRelationshipImport>();
+            CreateMap<view_example_relationship, ExampleRelationshipImport>();
+
+            CreateMap<cache_sql, CacheSql>();
+            CreateMap<cache_sql, CacheSql>().ReverseMap();
             #endregion
         }
 
