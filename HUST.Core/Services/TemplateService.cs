@@ -636,6 +636,17 @@ namespace HUST.Core.Services
                 });
             }
 
+            // Xử lý thêm với dữ liệu example
+            // Thêm hightlight mặc định
+            // Modified by pthieu 09.06.2023: Nếu không có hight light thì mặc định toàn bộ từ là hight light
+            Parallel.ForEach(lstExample, ex => {
+                if (!string.IsNullOrEmpty(ex.DetailHtml) && !FunctionUtil.CheckStringHasHightlight(ex.DetailHtml))
+                {
+                    ex.DetailHtml = FunctionUtil.GenerateStringHightlight(ex.DetailHtml);
+                }
+            });
+            
+
             // Lưu dữ liệu hợp lệ vào cache sql
             var numberValidRecord = lstConcept.Count + lstConceptRel.Count + lstExample.Count + lstExampleRel.Count;
             var importSession = $"{Guid.NewGuid()}_{dictionaryId}";
