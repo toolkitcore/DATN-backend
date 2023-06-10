@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Distributed;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,8 +32,9 @@ namespace HUST.Core.Utils
         /// <param name="cacheValue">Giá trị cần cache</param>
         /// <param name="cacheType">Loại cache</param>
         /// <param name="timeout">Thời gian hết hạn</param>
+        /// <param name="transaction"></param>
         /// <returns></returns>
-        public async Task<bool> SetCache(string cacheKey, string cacheValue, int? cacheType, TimeSpan? timeout = null)
+        public async Task<bool> SetCache(string cacheKey, string cacheValue, int? cacheType, TimeSpan? timeout = null, IDbTransaction transaction = null)
         {
             if(timeout == null)
             {
@@ -49,7 +51,7 @@ namespace HUST.Core.Utils
                 start_time = startTime,
                 end_time = endTime
             };
-            await _repository.Insert(cache);
+            await _repository.Insert(cache, transaction);
             return true;
         }
 
@@ -57,12 +59,13 @@ namespace HUST.Core.Utils
         /// Xóa giá trị trong cache
         /// </summary>
         /// <param name="cacheKey"></param>
+        /// <param name="transaction"></param>
         /// <returns></returns>
-        public async Task<bool> DeleteCache(string cacheKey)
+        public async Task<bool> DeleteCache(string cacheKey, IDbTransaction transaction = null)
         {
             await _repository.Delete(new {
                 cache_key = cacheKey
-            });
+            }, transaction);
             return true;
         }
 
@@ -70,10 +73,11 @@ namespace HUST.Core.Utils
         /// Xóa giá trị trong cache với tham số truyền vào
         /// </summary>
         /// <param name="param"></param>
+        /// <param name="transaction"></param>
         /// <returns></returns>
-        public async Task<bool> DeleteCache(object param)
+        public async Task<bool> DeleteCache(object param, IDbTransaction transaction = null)
         {
-            await _repository.Delete(param);
+            await _repository.Delete(param, transaction);
             return true;
         }
 

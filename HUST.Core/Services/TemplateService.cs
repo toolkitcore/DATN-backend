@@ -286,7 +286,8 @@ namespace HUST.Core.Services
 
                     if (result)
                     {
-                        result = await _repository.Insert<example>(lstExample, transaction);
+                        // Thực tế, có thể làm song song với insert concept
+                        result = await _repository.Insert<example>(lstExample, transaction); 
                     }
 
                     if (result)
@@ -296,12 +297,13 @@ namespace HUST.Core.Services
 
                     if (result)
                     {
+                        // Thực tế, có thể làm song song với insert concept_relationship
                         result = await _repository.Insert<example_relationship>(lstExampleRel, transaction);
                     }
 
                     if (result)
                     {
-                        result = await _cacheSql.DeleteCache(importSession); // TODO: Thêm transaction
+                        result = await _cacheSql.DeleteCache(importSession, transaction);
                     }
 
                     if (result)
