@@ -58,6 +58,45 @@ namespace HUST.Api.Controllers
             return res;
         }
 
+        /// <summary>
+        /// Lấy danh sách example link
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("get_list_example_link")]
+        public async Task<IServiceResult> GetListExampleLink()
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.GetListExampleLink();
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Lấy danh sách example attribute
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("get_list_example_attribute")]
+        public async Task<IServiceResult> GetListExampleAttribute()
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.GetListExampleAttribute();
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
         #endregion
     }
 }

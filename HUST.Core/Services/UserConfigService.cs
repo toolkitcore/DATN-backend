@@ -148,6 +148,58 @@ namespace HUST.Core.Services
 
             return res;
         }
+
+        /// <summary>
+        /// Lấy danh sách example link
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetListExampleLink()
+        {
+            var res = new ServiceResult();
+
+            var userId = this.ServiceCollection.AuthUtil.GetCurrentUserId();
+            var data = await _userRepository.SelectObjects<ExampleLink>(new Dictionary<string, object>
+            {
+                { nameof(example_link.user_id), userId }
+            }) as List<ExampleLink>;
+
+            data?.Add(new ExampleLink
+            {
+                ExampleLinkId = Guid.Empty,
+                SysExampleLinkId = Guid.Empty,
+                UserId = userId,
+                ExampleLinkName = "No link",
+                ExampleLinkType = (int)ExampleLinkType.NoLink,
+                SortOrder = 0
+            });
+
+            res.Data = data?.OrderBy(x => x.SortOrder);
+
+            return res;
+        }
+
+        /// <summary>
+        /// Lấy danh sách example attribute
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetListExampleAttribute()
+        {
+            var res = new ServiceResult();
+
+            var configData = await this.GetAllConfigData();
+            var lstExampleLink = (await this.GetListExampleLink()).Data;
+            res.Data = new
+            {
+                ListExampleLink = lstExampleLink,
+                ListTone = this.ServiceCollection.Mapper.Map<List<Tone>>(configData.ListTone).OrderBy(x => x.SortOrder),
+                ListMode = this.ServiceCollection.Mapper.Map<List<Mode>>(configData.ListMode).OrderBy(x => x.SortOrder),
+                ListRegister = this.ServiceCollection.Mapper.Map<List<Register>>(configData.ListRegister).OrderBy(x => x.SortOrder),
+                ListNuance = this.ServiceCollection.Mapper.Map<List<Nuance>>(configData.ListNuance).OrderBy(x => x.SortOrder),
+                ListDialect = this.ServiceCollection.Mapper.Map<List<Dialect>>(configData.ListDialect).OrderBy(x => x.SortOrder),
+            };
+
+            return res;
+        }
         #endregion
 
     }
