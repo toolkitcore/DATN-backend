@@ -1,5 +1,6 @@
 ﻿using Dapper.Contrib.Extensions;
 using System;
+using System.Collections.Generic;
 
 namespace HUST.Core.Models.DTO
 {
@@ -58,5 +59,19 @@ namespace HUST.Core.Models.DTO
         /// Nội dung ví dụ dạng html
         /// </summary>
         public string DetailHtml { get; set; }
+
+        #region Custom properties
+
+        /// <summary>
+        /// Danh sách liên kết example-concept
+        /// </summary>
+        public List<ViewExampleRelationship> ListExampleRelationship { get; set; }
+
+        public string ToneName { get; set; }
+        public string ModeName { get; set; }
+        public string RegisterName { get; set; }
+        public string NuanceName { get; set; }
+        public string DialectName { get; set; }
+        #endregion
     }
 }

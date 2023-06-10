@@ -7,6 +7,20 @@ using System.Threading.Tasks;
 namespace HUST.Core.Constants
 {
     /// <summary>
+    /// Giá trị mặc định của các cấu hình
+    /// </summary>
+    public static class UserConfigDataDefault
+    {
+        public const string ConceptLinkDefault = "No link";
+        public const string ExampleLinkDefault = "No link";
+        public const string ToneDefault = "Neutral";
+        public const string ModeDefault = "Neutral";
+        public const string RegisterDefault = "Neutral";
+        public const string NuanceDefault = "Neutral";
+        public const string DialectDefault = "Neutral";
+    }
+
+    /// <summary>
     /// Extension của file
     /// </summary>
     public static class FileExtension

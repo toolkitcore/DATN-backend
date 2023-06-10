@@ -261,7 +261,7 @@ namespace HUST.Core.Services
 
             if (queryRes == null)
             {
-                return null;
+                return res.OnSuccess(null);
             }
 
             var concept = (queryRes[nameof(Models.Entity.concept)] as List<Models.Entity.concept>)?.FirstOrDefault();

@@ -264,5 +264,25 @@ namespace HUST.Core.Utils
         {
             return Regex.Replace(input, "<.*?>", String.Empty);
         }
+
+        /// <summary>
+        /// Kiểm tra chuỗi có đoạn highlight hay không
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static bool CheckStringHasHightlight(string str)
+        {
+            return Regex.IsMatch(str, "<h.*>.*</h>");
+        }
+
+        /// <summary>
+        /// Sinh chuỗi highlight
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string GenerateStringHightlight(string str)
+        {
+            return $"<h>{str}</h>";
+        }
     }
 }

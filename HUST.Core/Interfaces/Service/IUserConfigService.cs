@@ -24,5 +24,17 @@ namespace HUST.Core.Interfaces.Service
         /// <returns></returns>
         Task<IServiceResult> GetListConceptLink();
 
+        /// <summary>
+        /// Lấy danh sách example link
+        /// </summary>
+        /// <returns></returns>
+        Task<IServiceResult> GetListExampleLink();
+
+        /// <summary>
+        /// Lấy danh sách example attribute
+        /// </summary>
+        /// <returns></returns>
+        Task<IServiceResult> GetListExampleAttribute();
+
     }
 }

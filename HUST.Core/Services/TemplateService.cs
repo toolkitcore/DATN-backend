@@ -286,7 +286,8 @@ namespace HUST.Core.Services
 
                     if (result)
                     {
-                        result = await _repository.Insert<example>(lstExample, transaction);
+                        // Thực tế, có thể làm song song với insert concept
+                        result = await _repository.Insert<example>(lstExample, transaction); 
                     }
 
                     if (result)
@@ -296,12 +297,13 @@ namespace HUST.Core.Services
 
                     if (result)
                     {
+                        // Thực tế, có thể làm song song với insert concept_relationship
                         result = await _repository.Insert<example_relationship>(lstExampleRel, transaction);
                     }
 
                     if (result)
                     {
-                        result = await _cacheSql.DeleteCache(importSession); // TODO: Thêm transaction
+                        result = await _cacheSql.DeleteCache(importSession, transaction);
                     }
 
                     if (result)
@@ -489,6 +491,12 @@ namespace HUST.Core.Services
             var now = DateTime.Now;
 
             var configData = await _userConfigService.GetAllConfigData(); // Lấy dữ liệu config của user hiện tại
+            var defaultTone = configData.ListTone.Find(x => x.tone_type == (int)ToneType.Neutral);
+            var defaultMode = configData.ListMode.Find(x => x.mode_type == (int)ModeType.Neutral);
+            var defaultRegister = configData.ListRegister.Find(x => x.register_type == (int)RegisterType.Neutral);
+            var defaultNuance = configData.ListNuance.Find(x => x.nuance_type == (int)NuanceType.Neutral);
+            var defaultDialect = configData.ListDialect.Find(x => x.dialect_type == (int)DialectType.Neutral);
+
             var lstValidateError = new List<ValidateResultImport>();
 
             // Dữ liệu concept
@@ -584,17 +592,30 @@ namespace HUST.Core.Services
                     continue;
                 }
 
-                // TODO: validate trường hợp example chưa highlight từ nào => Có thể xử lý tự động chèn tag html vào 2 đấu
+                // Nếu giá trị lựa chọn ở dạng default (neutral) thì khi lưu db để là null
+                //var toneId = (string.IsNullOrEmpty(row.ToneName) || row.ToneName == UserConfigDataDefault.ToneDefault) ? (Guid?)null : findTone.tone_id;
+                //var modeId = (string.IsNullOrEmpty(row.ModeName) || row.ModeName == UserConfigDataDefault.ModeDefault) ? (Guid?)null : findMode.mode_id;
+                //var registerId = (string.IsNullOrEmpty(row.RegisterName) || row.RegisterName == UserConfigDataDefault.RegisterDefault) ? (Guid?)null : findRegister.register_id;
+                //var nuanceId = (string.IsNullOrEmpty(row.NuanceName) || row.NuanceName == UserConfigDataDefault.NuanceDefault) ? (Guid?)null : findNuance.nuance_id;
+                //var dialectId = (string.IsNullOrEmpty(row.DialectName) || row.DialectName == UserConfigDataDefault.DialectDefault) ? (Guid?)null : findDialect.dialect_id;
+
+                // Nếu giá trị tone, mode... để trống => mặc định lấy default
+                var toneId = string.IsNullOrEmpty(row.ToneName) ? defaultTone?.tone_id : findTone?.tone_id;
+                var modeId = string.IsNullOrEmpty(row.ModeName) ? defaultMode?.mode_id : findMode?.mode_id;
+                var registerId = string.IsNullOrEmpty(row.RegisterName) ? defaultRegister?.register_id : findRegister?.register_id;
+                var nuanceId = string.IsNullOrEmpty(row.NuanceName) ? defaultNuance?.nuance_id : findNuance?.nuance_id;
+                var dialectId = string.IsNullOrEmpty(row.DialectName) ? defaultDialect?.dialect_id : findDialect?.dialect_id;
+
                 lstExample.Add(new Example
                 {
                     ExampleId = Guid.NewGuid(),
                     Detail = FunctionUtil.StripHtml(row.DetailHtml),
                     DetailHtml = row.DetailHtml,
-                    ToneId = string.IsNullOrEmpty(row.ToneName) ? null : findTone.tone_id,
-                    ModeId = string.IsNullOrEmpty(row.ModeName) ? null : findMode.mode_id,
-                    RegisterId = string.IsNullOrEmpty(row.RegisterName) ? null : findRegister.register_id,
-                    NuanceId = string.IsNullOrEmpty(row.NuanceName) ? null : findNuance.nuance_id,
-                    DialectId = string.IsNullOrEmpty(row.DialectName) ? null : findDialect.dialect_id,
+                    ToneId = toneId,
+                    ModeId = modeId,
+                    RegisterId = registerId,
+                    NuanceId = nuanceId,
+                    DialectId = dialectId,
                     Note = row.Note,
                     DictionaryId = dictionaryId,
                     CreatedDate = now
@@ -635,6 +656,17 @@ namespace HUST.Core.Services
                     CreatedDate = now
                 });
             }
+
+            // Xử lý thêm với dữ liệu example
+            // Thêm hightlight mặc định
+            // Modified by pthieu 09.06.2023: Nếu không có hight light thì mặc định toàn bộ từ là hight light
+            Parallel.ForEach(lstExample, ex => {
+                if (!string.IsNullOrEmpty(ex.DetailHtml) && !FunctionUtil.CheckStringHasHightlight(ex.DetailHtml))
+                {
+                    ex.DetailHtml = FunctionUtil.GenerateStringHightlight(ex.DetailHtml);
+                }
+            });
+            
 
             // Lưu dữ liệu hợp lệ vào cache sql
             var numberValidRecord = lstConcept.Count + lstConceptRel.Count + lstExample.Count + lstExampleRel.Count;

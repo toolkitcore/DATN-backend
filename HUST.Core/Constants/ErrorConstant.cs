@@ -88,6 +88,11 @@ namespace HUST.Core.Constants
         public const int Err3005 = 3005;
 
         /// <summary>
+        /// Example doesn't exist
+        /// </summary>
+        public const int Err4000 = 4000;
+
+        /// <summary>
         /// Duplicate examples
         /// </summary>
         public const int Err4001 = 4001;
@@ -116,6 +121,11 @@ namespace HUST.Core.Constants
         /// Import session does not exist or has expired
         /// </summary>
         public const int Err9004 = 9004;
+
+        /// <summary>
+        /// Data is stale
+        /// </summary>
+        public const int Err9998 = 9998;
 
         /// <summary>
         /// General error
@@ -147,6 +157,7 @@ namespace HUST.Core.Constants
         public const string Err3004 = "Circular link";
         public const string Err3005 = "Concept doesn't exist";
 
+        public const string Err4000 = "Example doesn't exist";
         public const string Err4001 = "Duplicate examples";
 
         public const string Err9000 = "Invalid parameters";
@@ -154,6 +165,8 @@ namespace HUST.Core.Constants
         public const string Err9002 = "This file is too large";
         public const string Err9003 = "This file type is not supported";
         public const string Err9004 = "Import session does not exist or has expired";
+
+        public const string Err9998 = "Data is stale";
     }
 
     /// <summary>
