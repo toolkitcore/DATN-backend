@@ -13,6 +13,7 @@ namespace HUST.Core.Models.ServerObject
         /// <summary>
         /// Index của dòng (bắt đầu từ 1, tương đương với chỉ số dòng excel)
         /// </summary>
+        [EpplusIgnore]
         public int RowIndex { get; set; }
     }
 }

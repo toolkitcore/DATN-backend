@@ -1,4 +1,5 @@
-﻿using OfficeOpenXml.Attributes;
+﻿using HUST.Core.Constants;
+using OfficeOpenXml.Attributes;
 using System;
 
 namespace HUST.Core.Models
@@ -72,10 +73,10 @@ namespace HUST.Core.Models
         public int ColumnIndex { get; set; }
 
 
-        public ImportColumn(int column)
+        public ImportColumn(int column) : base()
         {
             ColumnIndex = column;
-            Order = column;
+            Order = column - TemplateConfig.StartColData;
         }
     }
 }
