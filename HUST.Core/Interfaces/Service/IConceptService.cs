@@ -78,6 +78,38 @@ namespace HUST.Core.Interfaces.Service
         /// <param name="keywords"></param>
         /// <param name="dictionaryId"></param>
         /// <returns></returns>
-        Task<ServiceResult> GetListRecommendConcept(List<string> keywords, Guid? dictionaryId);
+        Task<IServiceResult> GetListRecommendConcept(List<string> keywords, Guid? dictionaryId);
+
+        #region Tree service
+        /// <summary>
+        /// Lấy dữ liệu tree của concept
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <returns></returns>
+        Task<IServiceResult> GetTree(Guid conceptId);
+
+        /// <summary>
+        /// Lấy dữ liệu tree: các concept cha của 1 concept
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <returns></returns>
+        Task<IServiceResult> GetConceptParents(Guid conceptId);
+
+        /// <summary>
+        /// Lấy dữ liệu tree: các concept con của 1 concept
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <returns></returns>
+        Task<IServiceResult> GetConceptChildren(Guid conceptId);
+
+        /// <summary>
+        /// Lấy dữ liệu tree: danh sách example liên kết với 1 concept theo loại mối quan hệ
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <returns></returns>
+        Task<IServiceResult> GetLinkedExampleByRelationshipType(Guid conceptId, Guid exampleLinkId);
+        #endregion
+
+
     }
 }

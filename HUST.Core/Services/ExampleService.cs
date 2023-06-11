@@ -424,6 +424,7 @@ namespace HUST.Core.Services
 
             var data = await _repository.SearchExample(param);
 
+            // TODO: Xem xét rule sắp xếp (theo created date?)
             res.Data = data.Select(x => new
             {
                 x.ExampleId,
