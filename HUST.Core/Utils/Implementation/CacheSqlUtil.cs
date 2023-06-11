@@ -34,7 +34,7 @@ namespace HUST.Core.Utils
         /// <param name="timeout">Thời gian hết hạn</param>
         /// <param name="transaction"></param>
         /// <returns></returns>
-        public async Task<bool> SetCache(string cacheKey, string cacheValue, int? cacheType, TimeSpan? timeout = null, IDbTransaction transaction = null)
+        public async Task<bool> SetCache(string cacheKey, string cacheValue, int? cacheType, TimeSpan? timeout = null, bool? isSystem = null, IDbTransaction transaction = null)
         {
             if(timeout == null)
             {
@@ -46,12 +46,20 @@ namespace HUST.Core.Utils
             {
                 cache_key = cacheKey,
                 value = cacheValue,
-                user_id = this._serviceCollection.AuthUtil.GetCurrentUserId(),
+                user_id = isSystem == true ? null : this._serviceCollection.AuthUtil.GetCurrentUserId(),
                 cache_type = cacheType,
                 start_time = startTime,
                 end_time = endTime
             };
-            await _repository.Insert(cache, transaction);
+
+            if(transaction != null)
+            {
+                await _repository.Insert(cache, transaction);
+            } else
+            {
+                await _repository.Insert(cache);
+            }
+            
             return true;
         }
 
@@ -79,6 +87,31 @@ namespace HUST.Core.Utils
         {
             await _repository.Delete(param, transaction);
             return true;
+        }
+
+        /// <summary>
+        /// Cập nhật chỉ dữ liệu cache (không thay đổi thời gian cache)
+        /// </summary>
+        /// <param name="param">anynomous object phải chứa key</param>
+        /// <returns></returns>
+        public async Task<bool> UpdateOnlyCacheValue(string cacheKey, string cacheValue, IDbTransaction transaction = null)
+        {
+            var item = await _repository.SelectObject<CacheSql>(new 
+            { 
+                cache_key = cacheKey
+            }) as CacheSql;
+
+            if(item == null)
+            {
+                return false;
+            }
+
+            var updateParam = new
+            {
+                cache_sql_id = item.CacheSqlId,
+                value = cacheValue
+            };
+            return await _repository.Update(updateParam, transaction);
         }
 
         /// <summary>
