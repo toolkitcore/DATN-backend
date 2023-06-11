@@ -68,6 +68,8 @@ namespace HUST.Core.Constants
         public const string HustInstanceCache = "Hust";
 
         public const string SessionCacheKey = "session_{0}";
+
+        public const string WordsapiNumberRequestPerDayCache = "WordsapiNumberRequestPerDay";
     }
 
     /// <summary>

@@ -19,6 +19,15 @@
     }
 
     /// <summary>
+    /// Loại external api
+    /// </summary>
+    public enum ExternalApiType
+    {
+        WordsApi = 1,
+        FreeDictionaryApi = 2
+    }
+
+    /// <summary>
     /// Trạng thái tài khoản người dùng
     /// </summary>
     public enum UserStatus

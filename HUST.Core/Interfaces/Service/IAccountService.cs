@@ -90,5 +90,28 @@ namespace HUST.Core.Interfaces.Service
         /// </summary>
         /// <param name="sessionId"></param>
         void SetResponseSessionCookie(string sessionId);
+
+        #region Helper
+        /// <summary>
+        /// Lấy key cache throttle hạn chế thời gian call api
+        /// </summary>
+        /// <returns></returns>
+        string GetThrottleCacheKey(string name);
+
+        /// <summary>
+        /// Kiểm tra thời gian cần chờ trước khi call api liên tục
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="seconds"></param>
+        /// <returns></returns>
+        double GetThrottleTime(string name);
+
+        /// <summary>
+        /// Set thời gian chặn call api liên tục
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="seconds"></param>
+        void SetThrottleTime(string name, int seconds = 120);
+        #endregion
     }
 }

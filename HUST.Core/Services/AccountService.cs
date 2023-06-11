@@ -519,19 +519,19 @@ namespace HUST.Core.Services
         /// Lấy key cache throttle hạn chế thời gian call api
         /// </summary>
         /// <returns></returns>
-        private string GetThrottleCacheKey(string name)
+        public string GetThrottleCacheKey(string name)
         {
             var clientIp = _httpContext.HttpContext.Connection.RemoteIpAddress.ToString();
             return $"{name}-{clientIp}";
         }
-        
+
         /// <summary>
         /// Kiểm tra thời gian cần chờ trước khi call api liên tục
         /// </summary>
         /// <param name="name"></param>
         /// <param name="seconds"></param>
         /// <returns></returns>
-        private double GetThrottleTime(string name)
+        public double GetThrottleTime(string name)
         {
             var key = GetThrottleCacheKey(name);
             double waitTime = 0;
@@ -551,7 +551,7 @@ namespace HUST.Core.Services
         /// </summary>
         /// <param name="name"></param>
         /// <param name="seconds"></param>
-        private void SetThrottleTime(string name, int seconds = 120)
+        public void SetThrottleTime(string name, int seconds = 120)
         {
             var key = GetThrottleCacheKey(name);
             var timeExpired = DateTime.Now.AddSeconds(seconds);
