@@ -60,6 +60,27 @@ namespace HUST.Api.Controllers
             return res;
         }
 
+        /// <summary>
+        /// Lấy dữ liệu freedictionaryapi
+        /// </summary>
+        /// <param name="word"></param>
+        /// <returns></returns>
+        [HttpGet("freedictionaryapi")]
+        public async Task<IServiceResult> GetFreeDictionaryApiResult(string word)
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.GetFreeDictionaryApiResult(word);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
+
         #endregion
     }
 }

@@ -18,5 +18,12 @@ namespace HUST.Core.Interfaces.Service
         /// <param name="word"></param>
         /// <returns></returns>
         Task<IServiceResult> GetWordsapiResult(string word);
+
+        /// <summary>
+        /// Lấy kết quả request free dictionaryapi
+        /// </summary>
+        /// <param name="word"></param>
+        /// <returns></returns>
+        Task<IServiceResult> GetFreeDictionaryApiResult(string word);
     }
 }

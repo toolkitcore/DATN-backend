@@ -11,6 +11,7 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace HUST.Core.Services
@@ -65,7 +66,7 @@ namespace HUST.Core.Services
 
             // Lấy ra config trong appsetting
             var url = this.ServiceCollection.ConfigUtil.GetAPIUrl(WordsapiConfigs.Url);
-            var key = this.ServiceCollection.ConfigUtil.GetAPIUrl(WordsapiConfigs.Key);
+            var apiKey = this.ServiceCollection.ConfigUtil.GetAPIUrl(WordsapiConfigs.Key);
             var strMaxRequestPerDay = this.ServiceCollection.ConfigUtil.GetAPIUrl(WordsapiConfigs.MaxRequestPerDay);
             var parseRes = int.TryParse(strMaxRequestPerDay, out var maxRequestPerDay);
             if (string.IsNullOrEmpty(url) || !parseRes)
@@ -106,6 +107,10 @@ namespace HUST.Core.Services
 
             var client = new RestClient(string.Format(url, word));
             var request = new RestRequest();
+            if (!string.IsNullOrEmpty(apiKey))
+            {
+                request.AddHeader("X-Mashape-Key", apiKey);
+            }
             var response = await client.GetAsync(request);
 
             // Cache lại dữ liệu lấy được thành công
@@ -139,6 +144,95 @@ namespace HUST.Core.Services
             return res.OnSuccess(SerializeUtil.DeserializeObject<dynamic>(response.Content));
         }
 
+        /// <summary>
+        /// Lấy kết quả request free dictionaryapi
+        /// </summary>
+        /// <param name="word"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetFreeDictionaryApiResult(string word)
+        {
+            var res = new ServiceResult();
+
+            // Kiểm tra đầu vào
+            if (string.IsNullOrWhiteSpace(word))
+            {
+                return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+            }
+            word = word.ToLower().Trim();
+
+            // Lấy ra config trong appsetting
+            var url = this.ServiceCollection.ConfigUtil.GetAPIUrl(FreedictionaryapiConfigs.Url);
+            if (string.IsNullOrEmpty(url))
+            {
+                return res.OnError(ErrorCode.Err9999);
+            }
+
+            // Kiểm tra có data lưu sẵn không
+            var existCacheData = await _cacheRepository.SelectObject<CacheExternalWordApi>(new
+            {
+                word = word,
+                external_api_type = (int)ExternalApiType.FreeDictionaryApi
+            }) as CacheExternalWordApi;
+
+            if (existCacheData != null)
+            {
+                return res.OnSuccess(SerializeUtil.DeserializeObject<dynamic>(existCacheData.Value));
+            }
+
+            // Kiểm tra thời gian chặn api call liên tục
+            var keyThrottle = $"GetFreeDictionaryApiResult";
+            var waitTime = _accountService.GetThrottleTime(keyThrottle);
+            if (waitTime > 0)
+            {
+                res.OnError(ErrorCode.TooManyRequests, ErrorMessage.TooManyRequests, data: waitTime);
+                return res;
+            }
+
+            var client = new RestClient(url);
+            var request = new RestRequest(word);
+            var response = await client.GetAsync(request);
+
+            var content = response.Content;
+            // Cache lại dữ liệu lấy được thành công
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                string pattern = "((https://api.dictionaryapi.dev/media/pronunciations)((?!.mp3).)*(.mp3))";
+                var lstMp3 = new List<string>();
+                foreach (Match match in Regex.Matches(content, pattern))
+                {
+                    if (match.Success && match.Groups.Count > 0)
+                    {
+                        lstMp3.Add(match.Groups[1].Value);
+                    }
+                }
+
+                var savedData = new
+                {
+                    pronunciation = new
+                    {
+                        us = lstMp3.Find(x => Regex.IsMatch(x, "-us.mp3")),
+                        uk = lstMp3.Find(x => Regex.IsMatch(x, "-uk.mp3")),
+                        other = lstMp3.Find(x => !Regex.IsMatch(x, "-us.mp3") && !Regex.IsMatch(x, "-uk.mp3"))
+                    },
+                    content = SerializeUtil.DeserializeObject<dynamic>(content)
+                };
+                content = SerializeUtil.SerializeObject(savedData);
+                var cacheData = new cache_external_word_api
+                {
+                    external_api_type = (int)ExternalApiType.FreeDictionaryApi,
+                    word = word,
+                    route = word,
+                    value = content,
+                    created_date = DateTime.Now
+                };
+                await _cacheRepository.Insert(cacheData);
+            }
+
+            // Với trường hợp phải call external api => set thời gian chặn call api liên tục
+            _accountService.SetThrottleTime(keyThrottle, 10);
+
+            return res.OnSuccess(SerializeUtil.DeserializeObject<dynamic>(content));
+        }
         #endregion
     }
 }
