@@ -15,5 +15,7 @@ namespace HUST.Core.Models.Entity
         public string nuance_name { get; set; }
         public string dialect_name { get; set; }
         public string note { get; set; }
+        public DateTime? created_date { get; set; }
+        public DateTime? modified_date { get; set; }
     }
 }

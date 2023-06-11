@@ -13,5 +13,8 @@ namespace HUST.Core.Models.DTO
         public string ExampleHtml { get; set; }
         public Guid? ExampleLinkId { get; set; }
         public string ExampleLinkName { get; set; }
+        public DateTime? ConceptCreatedDate { get; set; }
+        public DateTime? ExampleCreatedDate { get; set; }
+        public DateTime? RelationCreatedDate { get; set; }
     }
 }

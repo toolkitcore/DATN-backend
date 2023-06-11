@@ -12,5 +12,8 @@ namespace HUST.Core.Models.DTO
         public string ParentName { get; set; }
         public Guid? ConceptLinkId { get; set; }
         public string ConceptLinkName { get; set; }
+        public DateTime? ChildCreatedDate { get; set; }
+        public DateTime? ParentCreatedDate { get; set; }
+        public DateTime? RelationCreatedDate { get; set; }
     }
 }
