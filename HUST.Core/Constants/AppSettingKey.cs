@@ -36,4 +36,10 @@ namespace HUST.Core.Constants
         public const string Database = "Database";
     }
 
+    public class WordsapiConfigs
+    {
+        public const string Url = "Wordsapi:Url";
+        public const string Key = "Wordsapi:Key";
+        public const string MaxRequestPerDay = "Wordsapi:MaxRequestPerDay";
+    }
 }
