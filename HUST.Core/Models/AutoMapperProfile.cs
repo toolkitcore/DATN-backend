@@ -128,6 +128,9 @@ namespace HUST.Core.Models
 
             CreateMap<cache_sql, CacheSql>();
             CreateMap<cache_sql, CacheSql>().ReverseMap();
+
+            CreateMap<cache_external_word_api, CacheExternalWordApi>();
+            CreateMap<cache_external_word_api, CacheExternalWordApi>().ReverseMap();
             #endregion
         }
 
