@@ -196,7 +196,7 @@ namespace HUST.Core.Services
             }
 
             // Kiểm tra concept có liên kết với example hay không
-            if(isForced != true)
+            if (isForced != true)
             {
                 var linkedExample = await _repository.SelectObjects<ExampleRelationship>(new
                 {
@@ -297,7 +297,7 @@ namespace HUST.Core.Services
         public async Task<IServiceResult> SearchConcept(string searchKey, string dictionaryId, bool? isSearchSoundex)
         {
             var res = new ServiceResult();
-            if(string.IsNullOrEmpty(dictionaryId))
+            if (string.IsNullOrEmpty(dictionaryId))
             {
                 dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId()?.ToString();
             }
@@ -317,7 +317,7 @@ namespace HUST.Core.Services
         {
             var res = new ServiceResult();
 
-            if(string.IsNullOrEmpty(conceptId) || string.IsNullOrEmpty(parentId))
+            if (string.IsNullOrEmpty(conceptId) || string.IsNullOrEmpty(parentId))
             {
                 return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
             }
@@ -328,14 +328,15 @@ namespace HUST.Core.Services
                 { nameof(view_concept_relationship.parent_id), parentId },
             }) as ViewConceptRelationship;
 
-            if(relation != null)
+            if (relation != null)
             {
                 res.Data = new
                 {
                     relation.ConceptLinkId,
                     relation.ConceptLinkName
                 };
-            } else
+            }
+            else
             {
                 res.Data = new
                 {
@@ -354,7 +355,7 @@ namespace HUST.Core.Services
         public async Task<IServiceResult> UpdateConceptRelationship(UpdateConceptRelationshipParam param)
         {
             var res = new ServiceResult();
-            if(param == null || param.ConceptId == Guid.Empty || param.ParentId == Guid.Empty)
+            if (param == null || param.ConceptId == Guid.Empty || param.ParentId == Guid.Empty)
             {
                 return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
             }
@@ -402,17 +403,17 @@ namespace HUST.Core.Services
             var linkParentToChild = taskLinkParentToChild.Result as ConceptRelationship;
 
             // Kiểm tra các trường hợp
-            if(childConcept == null || parentConcept == null)
+            if (childConcept == null || parentConcept == null)
             {
                 return res.OnError(ErrorCode.Err3005, ErrorMessage.Err3005);
             }
 
-            if(param.ConceptLinkId == null || param.ConceptLinkId == Guid.Empty)
+            if (param.ConceptLinkId == null || param.ConceptLinkId == Guid.Empty)
             {
                 // TH1: Liên kết = "No link" <=> Xóa bỏ liên kết nếu có.
                 // Có hay không có liên kết parent -> child đều xử lý như nhau, do sẽ không tạo circle link.
 
-                if(linkChildToParent != null)
+                if (linkChildToParent != null)
                 {
                     _ = await _conceptRelRepository.Delete(new
                     {
@@ -421,15 +422,15 @@ namespace HUST.Core.Services
                         parent_id = param.ParentId
                     });
                 }
-            } 
+            }
             else
             {
                 // TH2: Liên kết khác "No link"
 
                 // Nếu có liên kết parent -> child và không cưỡng chế cập nhật => lỗi circle link
-                if(linkParentToChild != null)
+                if (linkParentToChild != null)
                 {
-                    if(param.IsForced != true)
+                    if (param.IsForced != true)
                     {
                         return res.OnError(ErrorCode.Err3004, ErrorMessage.Err3004);
                     }
@@ -441,7 +442,7 @@ namespace HUST.Core.Services
                     });
                 }
 
-                if(linkChildToParent == null) // nếu có parent -> child thì chắc chắn child -> parent hiện tại đang = null => rơi vào TH này
+                if (linkChildToParent == null) // nếu có parent -> child thì chắc chắn child -> parent hiện tại đang = null => rơi vào TH này
                 {
                     _ = await _conceptRelRepository.Insert(new concept_relationship
                     {
@@ -451,10 +452,10 @@ namespace HUST.Core.Services
                         concept_link_id = param.ConceptLinkId,
                         created_date = DateTime.Now
                     });
-                } 
+                }
                 else if (linkChildToParent.ConceptLinkId != param.ConceptLinkId)
                 {
-                    _ = await _conceptRelRepository.Update(new 
+                    _ = await _conceptRelRepository.Update(new
                     {
                         concept_relationship_id = linkChildToParent.ConceptRelationshipId,
                         concept_link_id = param.ConceptLinkId,
@@ -473,11 +474,11 @@ namespace HUST.Core.Services
         /// <param name="keywords"></param>
         /// <param name="dictionaryId"></param>
         /// <returns></returns>
-        public async Task<ServiceResult> GetListRecommendConcept(List<string> keywords, Guid? dictionaryId)
+        public async Task<IServiceResult> GetListRecommendConcept(List<string> keywords, Guid? dictionaryId)
         {
             var res = new ServiceResult();
 
-            if(dictionaryId == null || dictionaryId == Guid.Empty)
+            if (dictionaryId == null || dictionaryId == Guid.Empty)
             {
                 dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId();
             }
@@ -614,7 +615,6 @@ namespace HUST.Core.Services
         }
         #endregion
 
-
         #region Helper
         /// <summary>
         /// Hàm chạy giải thuật heuristic tìm giá trị activate của nút trong mạng
@@ -670,5 +670,258 @@ namespace HUST.Core.Services
         }
         #endregion
 
+        #region Tree service
+        /// <summary>
+        /// Lấy dữ liệu tree của concept
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetTree(Guid conceptId)
+        {
+            var res = new ServiceResult();
+            if (conceptId == Guid.Empty)
+            {
+                return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+            }
+
+            var taskConcept = _repository.SelectObject<Concept>(new
+            {
+                concept_id = conceptId,
+            });
+
+            var taskParentLinkedConcept = _repository.SelectObjects<ViewConceptRelationship>(new
+            {
+                child_id = conceptId,
+            });
+
+            var taskChildLinkedConcept = _repository.SelectObjects<ViewConceptRelationship>(new
+            {
+                parent_id = conceptId,
+            });
+
+            var taskLinkedExample = _repository.SelectObjects<ViewExampleRelationship>(new
+            {
+                concept_id = conceptId
+            });
+
+            var taskExampleLink = _repository.SelectObjects<ExampleLink>(new
+            {
+                user_id = this.ServiceCollection.AuthUtil.GetCurrentUserId()
+            });
+
+            await Task.WhenAll(taskConcept, taskParentLinkedConcept, taskChildLinkedConcept, taskLinkedExample, taskExampleLink);
+
+            var concept = taskConcept.Result as Concept;
+            if (concept == null)
+            {
+                return res.OnError(ErrorCode.Err3005, ErrorMessage.Err3005);
+            }
+
+            var listParent = (taskParentLinkedConcept.Result as List<ViewConceptRelationship>)
+                .OrderBy(x => x.RelationCreatedDate)
+                .Select((x, i) => new
+                {
+                    ConceptId = x.ParentId,
+                    Title = x.ParentName,
+                    x.ConceptLinkId,
+                    x.ConceptLinkName,
+                    SortOrder = i
+                }).ToList();
+
+            var listChildren = (taskChildLinkedConcept.Result as List<ViewConceptRelationship>)
+                .OrderBy(x => x.RelationCreatedDate)
+                .Select((x, i) => new
+                {
+                    ConceptId = x.ChildId,
+                    Title = x.ChildName,
+                    x.ConceptLinkId,
+                    x.ConceptLinkName,
+                    SortOrder = i
+                }).ToList();
+
+            var listExample = (taskLinkedExample.Result as List<ViewExampleRelationship>)
+                .OrderBy(x => x.RelationCreatedDate)
+                .Select((x, i) => new
+                {
+                    x.ExampleId,
+                    x.Example,
+                    x.ExampleHtml,
+                    x.ExampleLinkId,
+                    x.ExampleLinkName,
+                    SortOrder = i
+                }).ToList();
+
+
+            var listExampleLink = taskExampleLink.Result as List<ExampleLink>;
+            var listTmpCount = listExample.GroupBy(x => x.ExampleLinkId, (key, g) =>
+            {
+                var item = g.FirstOrDefault();
+                return new
+                {
+                    ExampleLinkId = key,
+                    ExampleLinkName = item?.ExampleLinkName,
+                    Count = g.Count()
+                };
+            });
+            var listCountExampleLink = from l in listExampleLink
+                                       join c in listTmpCount on l.ExampleLinkId equals c.ExampleLinkId into gr
+                                       from t in gr.DefaultIfEmpty()
+                                       orderby l.SortOrder
+                                       select new
+                                       {
+                                           l.ExampleLinkId,
+                                           l.ExampleLinkName,
+                                           Count = t?.Count ?? 0,
+                                           l.SortOrder
+                                       };
+
+            res.Data = new
+            {
+                Concept = concept,
+                ListParent = listParent,
+                ListChildren = listChildren,
+                ListExample = listExample,
+                ListCountExampleLink = listCountExampleLink
+            };
+            return res;
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu tree: các concept cha của 1 concept
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetConceptParents(Guid conceptId)
+        {
+            var res = new ServiceResult();
+            if (conceptId == Guid.Empty)
+            {
+                return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+            }
+
+            var taskConcept = _repository.SelectObject<Concept>(new
+            {
+                concept_id = conceptId,
+            });
+
+            var taskParentLinkedConcept = _repository.SelectObjects<ViewConceptRelationship>(new
+            {
+                child_id = conceptId,
+            });
+
+            await Task.WhenAll(taskConcept, taskParentLinkedConcept);
+
+            var concept = taskConcept.Result as Concept;
+            if (concept == null)
+            {
+                return res.OnError(ErrorCode.Err3005, ErrorMessage.Err3005);
+            }
+
+            res.Data = (taskParentLinkedConcept.Result as List<ViewConceptRelationship>)
+                .OrderBy(x => x.RelationCreatedDate)
+                .Select((x, i) => new
+                {
+                    ConceptId = x.ParentId,
+                    Title = x.ParentName,
+                    x.ConceptLinkId,
+                    x.ConceptLinkName,
+                    SortOrder = i
+                }).ToList();
+
+            return res;
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu tree: các concept con của 1 concept
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetConceptChildren(Guid conceptId)
+        {
+            var res = new ServiceResult();
+            if (conceptId == Guid.Empty)
+            {
+                return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+            }
+
+            var taskConcept = _repository.SelectObject<Concept>(new
+            {
+                concept_id = conceptId,
+            });
+
+            var taskChildLinkedConcept = _repository.SelectObjects<ViewConceptRelationship>(new
+            {
+                parent_id = conceptId,
+            });
+
+            await Task.WhenAll(taskConcept, taskChildLinkedConcept);
+
+            var concept = taskConcept.Result as Concept;
+            if (concept == null)
+            {
+                return res.OnError(ErrorCode.Err3005, ErrorMessage.Err3005);
+            }
+
+            res.Data = (taskChildLinkedConcept.Result as List<ViewConceptRelationship>)
+                .OrderBy(x => x.RelationCreatedDate)
+                .Select((x, i) => new
+                {
+                    ConceptId = x.ChildId,
+                    Title = x.ChildName,
+                    x.ConceptLinkId,
+                    x.ConceptLinkName,
+                    SortOrder = i
+                }).ToList();
+
+            return res;
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu tree: danh sách example liên kết với 1 concept theo loại mối quan hệ
+        /// </summary>
+        /// <param name="conceptId"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetLinkedExampleByRelationshipType(Guid conceptId, Guid exampleLinkId)
+        {
+            var res = new ServiceResult();
+            if (conceptId == Guid.Empty || exampleLinkId == Guid.Empty)
+            {
+                return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+            }
+
+            var taskConcept = _repository.SelectObject<Concept>(new
+            {
+                concept_id = conceptId,
+            });
+
+            var taskLinkedExample = _repository.SelectObjects<ViewExampleRelationship>(new
+            {
+                concept_id = conceptId,
+                example_link_id = exampleLinkId
+            });
+
+            await Task.WhenAll(taskConcept, taskLinkedExample);
+
+            var concept = taskConcept.Result as Concept;
+            if (concept == null)
+            {
+                return res.OnError(ErrorCode.Err3005, ErrorMessage.Err3005);
+            }
+
+            res.Data = (taskLinkedExample.Result as List<ViewExampleRelationship>)
+                .OrderBy(x => x.RelationCreatedDate)
+                .Select((x, i) => new
+                {
+                    x.ExampleId,
+                    x.Example,
+                    x.ExampleHtml,
+                    x.ExampleLinkId,
+                    x.ExampleLinkName,
+                    SortOrder = i
+                }).ToList();
+
+            return res;
+        }
+        #endregion
     }
 }

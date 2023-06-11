@@ -15,5 +15,7 @@ namespace HUST.Core.Models.DTO
         public string NuanceName { get; set; }
         public string DialectName { get; set; }
         public string Note { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public DateTime? ModifiedDate { get; set; }
     }
 }
