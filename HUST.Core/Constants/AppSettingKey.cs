@@ -42,4 +42,9 @@ namespace HUST.Core.Constants
         public const string Key = "Wordsapi:Key";
         public const string MaxRequestPerDay = "Wordsapi:MaxRequestPerDay";
     }
+
+    public class FreedictionaryapiConfigs
+    {
+        public const string Url = "Freedictionaryapi:Url";
+    }
 }
