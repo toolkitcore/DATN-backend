@@ -25,5 +25,26 @@ namespace HUST.Core.Interfaces.Service
         /// <param name="word"></param>
         /// <returns></returns>
         Task<IServiceResult> GetFreeDictionaryApiResult(string word);
+
+        /// <summary>
+        /// TextToSpeech
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        Task<IServiceResult> TextToSpeech(string text);
+
+        /// <summary>
+        /// TextToSpeech (Stream)
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        Task<byte[]> TextToSpeechStream(string text);
+
+        /// <summary>
+        /// Translate
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        Task<IServiceResult> Translate(string text);
     }
 }

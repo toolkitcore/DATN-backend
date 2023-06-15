@@ -15,6 +15,7 @@ namespace HUST.Core.Constants
         public const string Bearer = "Bearer";
         public const string TokenExpired = "Token-Expired";
         public const string SessionId = "x-session-id";
+        public const string HelperAppApiKey = "Hust-Helper-App-Key";
     }
 
     /// <summary>

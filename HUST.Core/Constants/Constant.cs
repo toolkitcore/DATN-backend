@@ -41,6 +41,7 @@ namespace HUST.Core.Constants
             "image/png", 
             "image/jpeg"
         };
+        public const string Audio = "audio/mp3";
     }
 
     /// <summary>
