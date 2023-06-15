@@ -22,7 +22,7 @@ namespace HUST.Core.Services
     public class ExternalApiService : BaseService, IExternalApiService
     {
         #region Field
-
+        private const int ThrottleTime = 6; // seconds
         private readonly ICacheExternalWordApiRepository _cacheRepository;
         private readonly ICacheSqlUtil _cacheSql;
         private readonly IAccountService _accountService;
@@ -101,8 +101,9 @@ namespace HUST.Core.Services
             var waitTime = _accountService.GetThrottleTime(keyThrottle);
             if (waitTime > 0)
             {
-                res.OnError(ErrorCode.TooManyRequests, ErrorMessage.TooManyRequests, data: waitTime);
-                return res;
+                //res.OnError(ErrorCode.TooManyRequests, ErrorMessage.TooManyRequests, data: waitTime);
+                //return res;
+                await Task.Delay((int)(waitTime * 1000));
             }
 
             var client = new RestClient(string.Format(url, word));
@@ -139,7 +140,7 @@ namespace HUST.Core.Services
             }
 
             // Với trường hợp phải call external api => set thời gian chặn call api liên tục
-            _accountService.SetThrottleTime(keyThrottle, 10);
+            _accountService.SetThrottleTime(keyThrottle, ThrottleTime);
 
             return res.OnSuccess(SerializeUtil.DeserializeObject<dynamic>(response.Content));
         }
@@ -184,9 +185,11 @@ namespace HUST.Core.Services
             var waitTime = _accountService.GetThrottleTime(keyThrottle);
             if (waitTime > 0)
             {
-                res.OnError(ErrorCode.TooManyRequests, ErrorMessage.TooManyRequests, data: waitTime);
-                return res;
+                //res.OnError(ErrorCode.TooManyRequests, ErrorMessage.TooManyRequests, data: waitTime);
+                //return res;
+                await Task.Delay((int)(waitTime * 1000));
             }
+            
 
             var client = new RestClient(url);
             var request = new RestRequest(word);
@@ -229,7 +232,7 @@ namespace HUST.Core.Services
             }
 
             // Với trường hợp phải call external api => set thời gian chặn call api liên tục
-            _accountService.SetThrottleTime(keyThrottle, 10);
+            _accountService.SetThrottleTime(keyThrottle, ThrottleTime);
 
             return res.OnSuccess(SerializeUtil.DeserializeObject<dynamic>(content));
         }
