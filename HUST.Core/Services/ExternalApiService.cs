@@ -23,6 +23,7 @@ namespace HUST.Core.Services
     {
         #region Field
         private const int ThrottleTime = 6; // seconds
+        private const int ThrottleTimeImportant = 10; // seconds
         private readonly ICacheExternalWordApiRepository _cacheRepository;
         private readonly ICacheSqlUtil _cacheSql;
         private readonly IAccountService _accountService;
@@ -189,7 +190,7 @@ namespace HUST.Core.Services
                 //return res;
                 await Task.Delay((int)(waitTime * 1000));
             }
-            
+
 
             var client = new RestClient(url);
             var request = new RestRequest(word);
@@ -235,6 +236,156 @@ namespace HUST.Core.Services
             _accountService.SetThrottleTime(keyThrottle, ThrottleTime);
 
             return res.OnSuccess(SerializeUtil.DeserializeObject<dynamic>(content));
+        }
+
+        /// <summary>
+        /// Text to speech
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> TextToSpeech(string text)
+        {
+            var res = new ServiceResult();
+
+            // Kiểm tra đầu vào
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+            }
+            text = text.ToLower().Trim();
+
+            // Lấy ra config trong appsetting
+            var url = this.ServiceCollection.ConfigUtil.GetAPIUrl(HelperAppConfigs.TextToSpeechUrl);
+            var key = this.ServiceCollection.ConfigUtil.GetAPIUrl(HelperAppConfigs.Key);
+            if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(key))
+            {
+                return res.OnError(ErrorCode.Err9999);
+            }
+
+            // Kiểm tra thời gian chặn api call liên tục
+            var keyThrottle = $"TextToSpeech";
+            var waitTime = _accountService.GetThrottleTime(keyThrottle);
+            if (waitTime > 0)
+            {
+                await Task.Delay((int)(waitTime * 1000));
+            }
+
+            // Call api
+            var client = new RestClient(string.Format(url, text));
+            var request = new RestRequest();
+            request.AddHeader(AuthKey.HelperAppApiKey, key); // Add key vào header
+            var response = await client.GetAsync(request);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                res.Data = new
+                {
+                    ContentType = FileContentType.Audio,
+                    Base64Data = Convert.ToBase64String(response.RawBytes)
+                };
+            }
+
+            // Set thời gian chặn call api liên tục
+            _accountService.SetThrottleTime(keyThrottle, ThrottleTime);
+
+            return res;
+        }
+
+        /// <summary>
+        /// Lấy kết quả request free dictionaryapi
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public async Task<byte[]> TextToSpeechStream(string text)
+        {
+            // Kiểm tra đầu vào
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return null;
+            }
+            text = text.ToLower().Trim();
+
+            // Lấy ra config trong appsetting
+            var url = this.ServiceCollection.ConfigUtil.GetAPIUrl(HelperAppConfigs.TextToSpeechUrl);
+            var key = this.ServiceCollection.ConfigUtil.GetAPIUrl(HelperAppConfigs.Key);
+            if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(key))
+            {
+                return null;
+            }
+
+            // Kiểm tra thời gian chặn api call liên tục
+            var keyThrottle = $"TextToSpeechStream";
+            var waitTime = _accountService.GetThrottleTime(keyThrottle);
+            if (waitTime > 0)
+            {
+                await Task.Delay((int)(waitTime * 1000));
+            }
+
+            // Call api
+            var client = new RestClient(string.Format(url, text));
+            var request = new RestRequest();
+            request.AddHeader(AuthKey.HelperAppApiKey, key); // Add key vào header
+            var response = await client.GetAsync(request);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return response.RawBytes;
+            }
+
+            // Set thời gian chặn call api liên tục
+            _accountService.SetThrottleTime(keyThrottle, ThrottleTime);
+
+            return null;
+        }
+
+        /// <summary>
+        /// Translate
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> Translate(string text)
+        {
+            var res = new ServiceResult();
+
+            // Kiểm tra đầu vào
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
+            }
+            text = text.ToLower().Trim();
+
+            // Lấy ra config trong appsetting
+            var url = this.ServiceCollection.ConfigUtil.GetAPIUrl(HelperAppConfigs.TranslateTestUrl);
+            var key = this.ServiceCollection.ConfigUtil.GetAPIUrl(HelperAppConfigs.Key);
+            if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(key))
+            {
+                return res.OnError(ErrorCode.Err9999);
+            }
+
+            // Kiểm tra thời gian chặn api call liên tục
+            var keyThrottle = $"Translate";
+            var waitTime = _accountService.GetThrottleTime(keyThrottle);
+            if (waitTime > 0)
+            {
+                await Task.Delay((int)(waitTime * 1000));
+            }
+
+            // Call api
+            var client = new RestClient(string.Format(url, text));
+            var request = new RestRequest();
+            request.AddHeader(AuthKey.HelperAppApiKey, key); // Add key vào header
+
+            var response = await client.GetAsync(request);
+
+            // Set thời gian chặn call api liên tục
+            _accountService.SetThrottleTime(keyThrottle, ThrottleTimeImportant);
+
+            return res.OnSuccess(new
+            {
+                StatusCode = response.StatusCode,
+                StatusDescription = response.StatusDescription,
+                Content = response.Content
+            });
         }
         #endregion
     }

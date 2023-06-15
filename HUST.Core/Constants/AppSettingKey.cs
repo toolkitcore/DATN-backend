@@ -47,4 +47,12 @@ namespace HUST.Core.Constants
     {
         public const string Url = "Freedictionaryapi:Url";
     }
+
+    public class HelperAppConfigs
+    {
+        public const string Url = "HelperApp:Url";
+        public const string Key = "HelperApp:Key";
+        public const string TextToSpeechUrl = "HelperApp:TextToSpeechUrl";
+        public const string TranslateTestUrl = "HelperApp:TranslateTestUrl";
+    }
 }
