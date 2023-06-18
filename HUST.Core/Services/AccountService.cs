@@ -170,7 +170,7 @@ namespace HUST.Core.Services
 
             // Đọc token
             var payload = this.ReadCallbackToken(token);
-            if (payload == null || payload.TimeExpired < DateTime.Now)
+            if (payload == null || payload.TimeExpired < DateTime.Now || payload.Name != CallbackTokenName.ActivateAccount)
             {
                 return res.OnError(ErrorCode.Err1003, ErrorMessage.Err1003);
             }
@@ -341,7 +341,7 @@ namespace HUST.Core.Services
             var res = new ServiceResult();
             // Đọc token
             var payload = this.ReadCallbackToken(token);
-            if (payload == null || payload.TimeExpired < DateTime.Now)
+            if (payload == null || payload.TimeExpired < DateTime.Now || payload.Name != CallbackTokenName.ResetPassword)
             {
                 return Task.FromResult(res.OnError(ErrorCode.Err1003, ErrorMessage.Err1003));
             } 
@@ -361,7 +361,7 @@ namespace HUST.Core.Services
 
             // Đọc token
             var payload = this.ReadCallbackToken(token);
-            if (payload == null || payload.TimeExpired < DateTime.Now)
+            if (payload == null || payload.TimeExpired < DateTime.Now || payload.Name != CallbackTokenName.ResetPassword)
             {
                 return res.OnError(ErrorCode.Err1003, ErrorMessage.Err1003);
             }
@@ -455,6 +455,7 @@ namespace HUST.Core.Services
             var payload = new CallbackTokenPayload
             {
                 UserId = userId,
+                Name = CallbackTokenName.ActivateAccount,
                 TimeExpired = DateTime.Now.AddDays(2) // Không dùng UtcNow, có thể lúc serialize bị convert
             };
 
@@ -476,6 +477,7 @@ namespace HUST.Core.Services
             var payload = new CallbackTokenPayload
             {
                 UserId = userId,
+                Name = CallbackTokenName.ResetPassword,
                 TimeExpired = DateTime.Now.AddMinutes(30) // Không dùng UtcNow
             };
 

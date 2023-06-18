@@ -29,6 +29,34 @@ namespace HUST.Api.Controllers
 
         #region Methods
         /// <summary>
+        /// Trả về thông tin kiểm tra đã đăng nhập hay chưa
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("check_authenticate"), AllowAnonymous]
+        public Task<IServiceResult> CheckAuthen()
+        {
+            IServiceResult res = new ServiceResult();
+            try
+            {
+                var userId = this.ServiceCollection.AuthUtil.GetCurrentUserId();
+                if (userId == null || userId == Guid.Empty)
+                {
+                    res.Data = false;
+                } else
+                {
+                    res.Data = true;
+                }
+                return Task.FromResult(res);
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return Task.FromResult(res); ;
+        }
+
+        /// <summary>
         /// Cho phép đăng ký một tài khoản mới
         /// </summary>
         /// <param name="param"></param>

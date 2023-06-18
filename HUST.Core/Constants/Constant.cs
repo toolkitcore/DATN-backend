@@ -74,6 +74,17 @@ namespace HUST.Core.Constants
     }
 
     /// <summary>
+    /// Callback token name
+    /// </summary>
+    public static class CallbackTokenName
+    {
+        public const string ActivateAccount = "ActivateAccount";
+
+        public const string ResetPassword = "ResetPassword";
+
+    }
+
+    /// <summary>
     /// Giá trị xác định trước độ mạnh của liên kết
     /// </summary>
     public static class LinkStrength
