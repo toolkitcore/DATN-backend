@@ -9,6 +9,7 @@ namespace HUST.Core.Models.ServerObject
     public class CallbackTokenPayload
     {
         public string UserId { get; set; }
+        public string Name { get; set; }
 
         public DateTime? TimeExpired { get; set; }
     }
