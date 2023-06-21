@@ -223,6 +223,26 @@ namespace HUST.Api.Controllers
             return res;
         }
 
+        /// <summary>
+        /// Lấy thông tin tài khoản: user + dictionary...
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("get_account_info")]
+        public async Task<IServiceResult> GetAccountInfo()
+        {
+            var res = new ServiceResult();
+            try
+            {
+                return await _service.GetAccountInfo();
+            }
+            catch (Exception ex)
+            {
+                this.ServiceCollection.HandleControllerException(res, ex);
+            }
+
+            return res;
+        }
+
         #endregion
     }
 }

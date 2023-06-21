@@ -71,6 +71,12 @@ namespace HUST.Core.Interfaces.Service
         /// <returns></returns>
         Task<IServiceResult> ResetPassword(string token, string newPassword);
 
+        /// <summary>
+        /// Lấy thông tin tài khoản
+        /// </summary>
+        /// <returns></returns>
+        Task<IServiceResult> GetAccountInfo();
+
 
         // TODO: 3 method bên dưới cần xem xét lại sự phù hợp với interface này
 

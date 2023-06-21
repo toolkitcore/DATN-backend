@@ -46,6 +46,9 @@ namespace HUST.Core.Services
         /// <param name="oldPassword"></param>
         /// <param name="newPassword"></param>
         /// <returns></returns>
+        /// Modified by PTHIEU 20.06.2023: 
+        /// - Sửa lỗi check password cũ luôn fail do hash không bằng nhau (sai logic check)
+        /// - Sửa lỗi lưu password mới mà chưa hash
         public async Task<IServiceResult> UpdatePassword(string oldPassword, string newPassword)
         {
             var res = new ServiceResult();
@@ -60,10 +63,10 @@ namespace HUST.Core.Services
             var user = await _repository.SelectObject<User>(new Dictionary<string, object>()
             {
                 { nameof(Models.Entity.user.user_id), userId },
-                { nameof(Models.Entity.user.password), SecurityUtil.HashPassword(oldPassword) }
+                //{ nameof(Models.Entity.user.password), SecurityUtil.HashPassword(oldPassword) }
             }) as User;
 
-            if(user == null)
+            if(user == null || !SecurityUtil.VerifyPassword(oldPassword, user.Password))
             {
                 return res.OnError(ErrorCode.Err1000, ErrorMessage.Err1000);
             }
@@ -71,7 +74,7 @@ namespace HUST.Core.Services
             await _repository.Update(new
             {
                 user_id = userId,
-                password = newPassword
+                password = SecurityUtil.HashPassword(newPassword)
             });
 
             return res.OnSuccess();

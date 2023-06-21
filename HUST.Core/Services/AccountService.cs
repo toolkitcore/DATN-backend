@@ -344,7 +344,7 @@ namespace HUST.Core.Services
             if (payload == null || payload.TimeExpired < DateTime.Now || payload.Name != CallbackTokenName.ResetPassword)
             {
                 return Task.FromResult(res.OnError(ErrorCode.Err1003, ErrorMessage.Err1003));
-            } 
+            }
 
             return Task.FromResult(res.OnSuccess());
         }
@@ -394,6 +394,31 @@ namespace HUST.Core.Services
             }
 
             return res;
+        }
+
+        /// <summary>
+        /// Lấy thông tin tài khoản: user, dictionary
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetAccountInfo()
+        {
+            var res = new ServiceResult();
+
+            var user = await _userRepository.SelectObject<User>(new
+            {
+                user_id = this.ServiceCollection.AuthUtil.GetCurrentUserId()
+            }) as User;
+
+            var dict = await _dictionaryRepository.SelectObject<Dictionary>(new
+            {
+                dictionary_id = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId()
+            }) as Dictionary;
+
+            return res.OnSuccess(new
+            {
+                User = user,
+                Dictionary = dict
+            });
         }
         #endregion
 
@@ -492,7 +517,7 @@ namespace HUST.Core.Services
         /// <returns></returns>
         private CallbackTokenPayload ReadCallbackToken(string token)
         {
-            if(string.IsNullOrEmpty(token))
+            if (string.IsNullOrEmpty(token))
             {
                 return null;
             }
@@ -513,7 +538,7 @@ namespace HUST.Core.Services
             {
                 return null;
             }
-            
+
 
         }
 
