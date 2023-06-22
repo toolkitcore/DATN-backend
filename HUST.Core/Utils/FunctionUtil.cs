@@ -195,7 +195,7 @@ namespace HUST.Core.Utils
         /// Kiểm tra kích thước file
         /// </summary>
         /// <param name="file"></param>
-        /// <param name="maxFileSize">Kích thước file tối đa - MB</param>
+        /// <param name="maxFileSize">Kích thước file tối đa - MB (defaut: 3 MiB, xấp xỉ 3.1 MB)</param>
         /// <returns></returns>
         public static bool IsValidFileSize(IFormFile file, double maxFileSize = 3)
         {
