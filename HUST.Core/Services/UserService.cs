@@ -156,10 +156,10 @@ namespace HUST.Core.Services
             var result = await _repository.Update(new 
             {
                 user_id = (Guid)userId,
-                display_name = param.DisplayName ?? user.DisplayName,
-                full_name = param.FullName ?? user.FullName,
-                birthday = param.Birthday != null ? DateTime.Parse(param.Birthday) : user.Birthday,
-                position = param.Position ?? user.Position,
+                display_name = param.DisplayName?.Trim(),
+                full_name = param.FullName?.Trim(),
+                birthday = param.Birthday != null ? DateTime.Parse(param.Birthday) : (DateTime?)null,
+                position = param.Position?.Trim(),
                 avatar = avatarLink ?? user.Avatar
             });
 
