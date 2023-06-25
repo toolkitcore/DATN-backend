@@ -224,12 +224,6 @@ namespace HUST.Core.Services
                 }) as Models.DTO.Dictionary;
             }
 
-
-            if (existDictionaryWithSameName != null)
-            {
-                return res.OnError(ErrorCode.Err2001, ErrorMessage.Err2001);
-            }
-
             // Transaction thêm từ điển mới: thêm từ điển + clone dữ liệu nếu cần
             // Exception sẽ không được bắt tại đây (mà bắt ở controller) => không tự động rollback được transaction
             // => có thể bổ sung try catch để bắt exception rồi rollback
@@ -349,12 +343,13 @@ namespace HUST.Core.Services
             }
 
             // Kiểm tra từ điển có đang sử dụng hay không
-            var isDictionaryInUse = string.Equals(dictionaryId, currentDictionaryId)
+            var isDictionaryInUse = string.Equals(dictionaryId, currentDictionaryId?.ToString())
                 || (lstDictionary.Count == 1 && string.Equals(dictionaryId, lstDictionary[0].DictionaryId.ToString())); // chú ý ToString
             if (isDictionaryInUse)
             {
                 return res.OnError(ErrorCode.Err2002, ErrorMessage.Err2002);
             }
+
 
             var result = await _repository.Delete(new
             {
