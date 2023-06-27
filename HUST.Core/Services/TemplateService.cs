@@ -279,23 +279,23 @@ namespace HUST.Core.Services
                     // Xóa trắng data từ điển
                     result = await _repository.DeleteDictionaryData(importData.DictionaryId, transaction);
 
-                    if (result)
+                    if (result && (lstConcept != null && lstConcept.Count > 0))
                     {
                         result = await _repository.Insert<concept>(lstConcept, transaction);
                     }
 
-                    if (result)
+                    if (result && (lstExample != null && lstExample.Count > 0))
                     {
                         // Thực tế, có thể làm song song với insert concept
                         result = await _repository.Insert<example>(lstExample, transaction); 
                     }
 
-                    if (result)
+                    if (result && (lstConceptRel != null && lstConceptRel.Count > 0))
                     {
                         result = await _repository.Insert<concept_relationship>(lstConceptRel, transaction);
                     }
 
-                    if (result)
+                    if (result && (lstExampleRel != null && lstExampleRel.Count > 0))
                     {
                         // Thực tế, có thể làm song song với insert concept_relationship
                         result = await _repository.Insert<example_relationship>(lstExampleRel, transaction);
