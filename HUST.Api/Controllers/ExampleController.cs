@@ -65,7 +65,7 @@ namespace HUST.Api.Controllers
         /// <param name="concept"></param>
         /// <returns></returns>
         [HttpPut("update_example")]
-        public async Task<IServiceResult> UpdateConcept([FromBody] Example example)
+        public async Task<IServiceResult> UpdateExample([FromBody] Example example)
         {
             var res = new ServiceResult();
             try
@@ -107,7 +107,7 @@ namespace HUST.Api.Controllers
         /// <param name="conceptId"></param>
         /// <returns></returns>
         [HttpGet("get_example")]
-        public async Task<IServiceResult> GetConcept([FromQuery] Guid exampleId)
+        public async Task<IServiceResult> GetExample([FromQuery] Guid exampleId)
         {
             var res = new ServiceResult();
             try
