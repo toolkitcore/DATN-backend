@@ -98,6 +98,11 @@ namespace HUST.Core.Constants
         public const int Err4001 = 4001;
 
         /// <summary>
+        /// No highlighted parts
+        /// </summary>
+        public const int Err4002 = 4002;
+
+        /// <summary>
         /// Invalid parameters
         /// </summary>
         public const int Err9000 = 9000;
@@ -159,6 +164,8 @@ namespace HUST.Core.Constants
 
         public const string Err4000 = "Example doesn't exist";
         public const string Err4001 = "Duplicate examples";
+        public const string Err4002 = "No highlighted parts";
+
 
         public const string Err9000 = "Invalid parameters";
         public const string Err9001 = "Invalid file upload";
