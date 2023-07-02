@@ -1,6 +1,7 @@
 ﻿using HUST.Core.Constants;
 using HUST.Core.Models.DTO;
 using HUST.Core.Models.Entity;
+using HUST.Core.Utils;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -53,7 +54,8 @@ namespace HUST.Core.Models.ServerObject
             };
 
             // Validate example
-            if (string.IsNullOrEmpty(DetailHtml))
+            if (string.IsNullOrWhiteSpace(DetailHtml) 
+                || string.IsNullOrWhiteSpace(FunctionUtil.StripHtml(DetailHtml)))
             {
                 res.IsValid = false;
                 res.ListErrorMessage.Add(string.Format(ImportValidateErrorMessage.Required, "Example"));

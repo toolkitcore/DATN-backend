@@ -609,8 +609,8 @@ namespace HUST.Core.Services
                 lstExample.Add(new Example
                 {
                     ExampleId = Guid.NewGuid(),
-                    Detail = FunctionUtil.StripHtml(row.DetailHtml),
-                    DetailHtml = row.DetailHtml,
+                    Detail = FunctionUtil.StripHtml(row.DetailHtml)?.Trim(),
+                    DetailHtml = FunctionUtil.StripHtmlExceptHightlight(row.DetailHtml)?.Trim(),
                     ToneId = toneId,
                     ModeId = modeId,
                     RegisterId = registerId,

@@ -56,13 +56,20 @@ namespace HUST.Core.Services
             var res = new ServiceResult();
 
             // Check đầu vào
-            if (example == null || string.IsNullOrWhiteSpace(example.DetailHtml) || !FunctionUtil.CheckStringHasHightlight(example.DetailHtml))
+            if (example == null || string.IsNullOrWhiteSpace(example.DetailHtml))
             {
                 return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
             }
 
-            example.DetailHtml = example.DetailHtml.Trim();
-            example.Detail = FunctionUtil.StripHtml(example.DetailHtml);
+            // PTHIEU 02.07.2023: Kiểm tra hightlight part, loại bỏ tag html trừ tag hightlight
+            example.DetailHtml = FunctionUtil.StripHtmlExceptHightlight(example.DetailHtml)?.Trim();
+            example.Detail = FunctionUtil.StripHtml(example.DetailHtml)?.Trim();
+
+            // Kiểm tra hightlight part
+            if (!FunctionUtil.CheckStringHasHightlight(example.DetailHtml) || string.IsNullOrEmpty(example.Detail))
+            {
+                return res.OnError(ErrorCode.Err4002, ErrorMessage.Err4002);
+            }
 
             // Gán dictId mặc định nếu chưa có
             if (example.DictionaryId == null || example.DictionaryId == Guid.Empty)
@@ -183,14 +190,20 @@ namespace HUST.Core.Services
                 || example.ExampleId == Guid.Empty
                 || example.DictionaryId == null
                 || example.DictionaryId == Guid.Empty
-                || string.IsNullOrWhiteSpace(example.DetailHtml) 
-                || !FunctionUtil.CheckStringHasHightlight(example.DetailHtml))
+                || string.IsNullOrWhiteSpace(example.DetailHtml))
             {
                 return res.OnError(ErrorCode.Err9000, ErrorMessage.Err9000);
             }
 
-            example.DetailHtml = example.DetailHtml.Trim();
-            example.Detail = FunctionUtil.StripHtml(example.DetailHtml);
+            // PTHIEU 02.07.2023: Kiểm tra hightlight part, loại bỏ tag html trừ tag hightlight
+            example.DetailHtml = FunctionUtil.StripHtmlExceptHightlight(example.DetailHtml)?.Trim();
+            example.Detail = FunctionUtil.StripHtml(example.DetailHtml)?.Trim();
+
+            // Kiểm tra hightlight part
+            if (!FunctionUtil.CheckStringHasHightlight(example.DetailHtml) || string.IsNullOrEmpty(example.Detail))
+            {
+                return res.OnError(ErrorCode.Err4002, ErrorMessage.Err4002);
+            }
 
             // Lấy ra bản ghi đã lưu trong db
             var savedExample = await _repository.SelectObject<Example>(new Dictionary<string, object>
