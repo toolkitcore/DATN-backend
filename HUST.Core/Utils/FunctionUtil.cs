@@ -262,8 +262,28 @@ namespace HUST.Core.Utils
         /// <returns></returns>
         public static string StripHtml(string input)
         {
-            return Regex.Replace(input, "<.*?>", String.Empty);
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+            return Regex.Replace(input, "<.*?>", string.Empty);
         }
+
+        /// <summary>
+        /// Loại bỏ tất cả thẻ html trừ thẻ hightlight
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        /// PTHIEU 02.07.2023
+        public static string StripHtmlExceptHightlight(string input)
+        {
+            if(string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+            return Regex.Replace(input, "</?(?!mark)\\w*\\b[^>]*>", string.Empty);
+        }
+
 
         /// <summary>
         /// Kiểm tra chuỗi có đoạn highlight hay không
@@ -272,8 +292,15 @@ namespace HUST.Core.Utils
         /// <returns></returns>
         public static bool CheckStringHasHightlight(string str)
         {
-            return Regex.IsMatch(str, "<h.*>.*</h>");
+            //return true;
+            if (string.IsNullOrEmpty(str))
+            {
+                return false;
+            }
+            return Regex.IsMatch(str, "<mark.*>.*</mark>");
+            
         }
+
 
         /// <summary>
         /// Sinh chuỗi highlight
@@ -282,7 +309,11 @@ namespace HUST.Core.Utils
         /// <returns></returns>
         public static string GenerateStringHightlight(string str)
         {
-            return $"<h>{str}</h>";
+            if (string.IsNullOrEmpty(str))
+            {
+                return str;
+            }
+            return $"<mark>{str}</mark>";
         }
     }
 }
