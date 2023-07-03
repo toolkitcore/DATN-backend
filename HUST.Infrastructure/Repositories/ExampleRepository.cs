@@ -40,7 +40,9 @@ namespace HUST.Infrastructure.Repositories
                 parameters.Add("$DialectId", param.DialectId);
 
                 string strListLinkedConceptId = null;
-                if(param.ListLinkedConceptId != null && param.ListLinkedConceptId.Count >= 0)
+                if(param.IsSearchUndecided != true 
+                    && param.ListLinkedConceptId != null 
+                    && param.ListLinkedConceptId.Count > 0)
                 {
                     strListLinkedConceptId = SerializeUtil.SerializeObject(param.ListLinkedConceptId);
                 }
