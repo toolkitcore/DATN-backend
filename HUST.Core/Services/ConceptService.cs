@@ -478,6 +478,11 @@ namespace HUST.Core.Services
         {
             var res = new ServiceResult();
 
+            if (keywords == null || keywords.Count == 0)
+            {
+                return res.OnSuccess(null);
+            }
+
             if (dictionaryId == null || dictionaryId == Guid.Empty)
             {
                 dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId();
@@ -545,6 +550,7 @@ namespace HUST.Core.Services
             //            var lstLinkedConcept = conceptData.Where(x => lstLinkedConceptId.Contains(x.ConceptId));
             //        }
             //}
+            data = data.Where(x => lstConcept.Contains(x.Concept1) && lstConcept.Contains(x.Concept2))?.ToList();
             bool isPrimary(string w)
             {
                 return keywords.Contains(w);
@@ -607,10 +613,20 @@ namespace HUST.Core.Services
             var myDict = new Dictionary<string, decimal>();
             for (var i = 0; i < n; ++i)
             {
-                myDict.Add(lstConcept[i], lstActivateScore[i]);
+                if (!keywords.Contains(lstConcept[i]))
+                {
+                    myDict.Add(lstConcept[i], lstActivateScore[i]);
+                }
             }
 
-            res.Data = from entry in myDict orderby entry.Value descending select entry;
+            var recommendList = from entry in myDict orderby entry.Value descending select entry;
+            res.Data = new
+            {
+                Result = recommendList,
+                Nodes = lstConcept,
+                Links = data
+
+            };
             return res;
         }
         #endregion
