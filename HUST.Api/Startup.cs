@@ -47,6 +47,7 @@ namespace HUST.Api
             services.AddScoped<IUserConfigService, UserConfigService>();
             services.AddScoped<IExampleService, ExampleService>();
             services.AddScoped<IExternalApiService, ExternalApiService>();
+            services.AddScoped<IUserSettingService, UserSettingService>();
 
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuditLogRepository, AuditLogRepository>();
@@ -56,6 +57,7 @@ namespace HUST.Api
             services.AddScoped<ICacheSqlRepository, CacheSqlRepository>();
             services.AddScoped<IExampleRepository, ExampleRepository>();
             services.AddScoped<ICacheExternalWordApiRepository, CacheExternalWordApiRepository>();
+            services.AddScoped<IUserSettingRepository, UserSettingRepository>();
 
         }
 
