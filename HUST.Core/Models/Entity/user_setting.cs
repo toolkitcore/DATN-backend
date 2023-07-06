@@ -13,7 +13,7 @@ namespace HUST.Core.Models.Entity
         /// Id khóa chính
         /// </summary>
         [System.ComponentModel.DataAnnotations.Key, ExplicitKey]
-        public Guid user_setting_id { get; set; }
+        public int user_setting_id { get; set; }
 
         /// <summary>
         /// Id người dùng
@@ -29,5 +29,10 @@ namespace HUST.Core.Models.Entity
         /// Value
         /// </summary>
         public string setting_value { get; set; }
+
+        /// <summary>
+        /// Là thiết lập của hệ thống
+        /// </summary>
+        public bool? is_system { get; set; }
     }
 }

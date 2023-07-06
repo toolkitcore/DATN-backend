@@ -12,7 +12,7 @@ namespace HUST.Core.Models.DTO
         /// Id khóa chính
         /// </summary>
         [Key]
-        public Guid UserSettingId { get; set; }
+        public int UserSettingId { get; set; }
 
         /// <summary>
         /// Id người dùng
@@ -28,5 +28,10 @@ namespace HUST.Core.Models.DTO
         /// Value
         /// </summary>
         public string SettingValue { get; set; }
+
+        /// <summary>
+        /// Là thiết lập của hệ thống
+        /// </summary>
+        public bool? IsSystem { get; set; }
     }
 }
