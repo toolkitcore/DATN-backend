@@ -17,5 +17,13 @@ namespace HUST.Core.Interfaces.Repository
         /// <param name="isSearchSoundex"></param>
         /// <returns></returns>
         Task<List<Concept>> SearchConcept(string searchKey, string dictionaryId, bool? isSearchSoundex);
+
+        /// <summary>
+        /// Thực hiện lấy danh sách top concept thêm mới gần đây nhất
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        Task<List<Concept>> GetListMostRecentConcept(string dictionaryId, int limit);
     }
 }

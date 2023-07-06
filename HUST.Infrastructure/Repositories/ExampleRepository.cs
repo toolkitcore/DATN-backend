@@ -64,6 +64,35 @@ namespace HUST.Infrastructure.Repositories
                 return new List<Example>();
             }
         }
+
+        /// <summary>
+        /// Thực hiện lấy danh sách top example thêm mới gần đây nhất
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        public async Task<List<Example>> GetListMostRecentExample(string dictionaryId, int limit)
+        {
+            using (var connection = await this.CreateConnectionAsync())
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("$DictionaryId", dictionaryId);
+                parameters.Add("$Limit", limit);
+
+                var res = await connection.QueryAsync<example>(
+                    sql: "Proc_Example_GetListMostRecentExample",
+                    param: parameters,
+                    commandType: CommandType.StoredProcedure,
+                    commandTimeout: ConnectionTimeout);
+
+                if (res != null)
+                {
+                    return this.ServiceCollection.Mapper.Map<List<Example>>(res);
+                }
+
+                return new List<Example>();
+            }
+        }
         #endregion
 
     }

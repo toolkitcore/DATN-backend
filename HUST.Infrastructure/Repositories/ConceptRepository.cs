@@ -50,6 +50,35 @@ namespace HUST.Infrastructure.Repositories
                 return new List<Concept>();
             }
         }
+
+        /// <summary>
+        /// Thực hiện lấy danh sách top concept thêm mới gần đây nhất
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        public async Task<List<Concept>> GetListMostRecentConcept(string dictionaryId, int limit)
+        {
+            using (var connection = await this.CreateConnectionAsync())
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("$DictionaryId", dictionaryId);
+                parameters.Add("$Limit", limit);
+
+                var res = await connection.QueryAsync<concept>(
+                    sql: "Proc_Concept_GetListMostRecentConcept",
+                    param: parameters,
+                    commandType: CommandType.StoredProcedure,
+                    commandTimeout: ConnectionTimeout);
+
+                if (res != null)
+                {
+                    return this.ServiceCollection.Mapper.Map<List<Concept>>(res);
+                }
+
+                return new List<Concept>();
+            }
+        }
         #endregion
 
     }

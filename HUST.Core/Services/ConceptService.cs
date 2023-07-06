@@ -939,5 +939,21 @@ namespace HUST.Core.Services
             return res;
         }
         #endregion
+
+        #region Dashboard service
+        /// <summary>
+        /// Thực hiện lấy danh sách top concept thêm mới gần đây nhất
+        /// </summary>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetListMostRecentConcept(int limit)
+        {
+            var res = new ServiceResult();
+            var dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId()?.ToString();
+            res.Data = await _repository.GetListMostRecentConcept(dictionaryId, limit);
+
+            return res;
+        }
+        #endregion
     }
 }

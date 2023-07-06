@@ -46,5 +46,14 @@ namespace HUST.Core.Interfaces.Service
         /// <param name="param"></param>
         /// <returns></returns>
         Task<IServiceResult> SearchExample(SearchExampleParam param);
+
+        #region Dashboard
+        /// <summary>
+        /// Thực hiện lấy danh sách top example thêm mới gần đây nhất
+        /// </summary>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        Task<IServiceResult> GetListMostRecentExample(int limit);
+        #endregion
     }
 }
