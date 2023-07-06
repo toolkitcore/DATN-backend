@@ -450,7 +450,21 @@ namespace HUST.Core.Services
 
         #endregion
 
+        #region Dashboard service
+        /// <summary>
+        /// Thực hiện lấy danh sách top example thêm mới gần đây nhất
+        /// </summary>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        public async Task<IServiceResult> GetListMostRecentExample(int limit)
+        {
+            var res = new ServiceResult();
+            var dictionaryId = this.ServiceCollection.AuthUtil.GetCurrentDictionaryId()?.ToString();
+            res.Data = await _repository.GetListMostRecentExample(dictionaryId, limit);
 
+            return res;
+        }
+        #endregion
 
     }
 }

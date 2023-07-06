@@ -110,6 +110,13 @@ namespace HUST.Core.Interfaces.Service
         Task<IServiceResult> GetLinkedExampleByRelationshipType(Guid conceptId, Guid exampleLinkId);
         #endregion
 
-
+        #region Dashboard
+        /// <summary>
+        /// Thực hiện lấy danh sách top concept thêm mới gần đây nhất
+        /// </summary>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        Task<IServiceResult> GetListMostRecentConcept(int limit);
+        #endregion
     }
 }

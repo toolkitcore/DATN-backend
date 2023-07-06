@@ -16,5 +16,13 @@ namespace HUST.Core.Interfaces.Repository
         /// <param name="param"></param>
         /// <returns></returns>
         Task<List<Example>> SearchExample(SearchExampleParam param);
+
+        /// <summary>
+        /// Thực hiện lấy danh sách top example thêm mới gần đây nhất
+        /// </summary>
+        /// <param name="dictionaryId"></param>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        Task<List<Example>> GetListMostRecentExample(string dictionaryId, int limit);
     }
 }
