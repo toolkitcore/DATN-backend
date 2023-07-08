@@ -31,7 +31,8 @@ namespace HUST.Core.Services
             var email = new MimeMessage();
 
             // set from address, to address
-            email.Sender = MailboxAddress.Parse(_mailSettings.Mail);
+            //email.Sender = MailboxAddress.Parse(_mailSettings.Mail);
+            email.From.Add(new MailboxAddress("HUSTPVO-Support", _mailSettings.Mail));
             email.To.Add(MailboxAddress.Parse(mailParam.ToEmail));
 
             // set subject
