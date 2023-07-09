@@ -30,21 +30,25 @@ namespace HUST.Core.Interfaces.Service
         /// TextToSpeech
         /// </summary>
         /// <param name="text"></param>
+        /// <param name="lang"></param>
         /// <returns></returns>
-        Task<IServiceResult> TextToSpeech(string text);
+        Task<IServiceResult> TextToSpeech(string text, string lang = "en");
 
         /// <summary>
         /// TextToSpeech (Stream)
         /// </summary>
         /// <param name="text"></param>
+        /// <param name="lang"></param>
         /// <returns></returns>
-        Task<byte[]> TextToSpeechStream(string text);
+        Task<byte[]> TextToSpeechStream(string text, string lang = "en");
 
         /// <summary>
         /// Translate
         /// </summary>
         /// <param name="text"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
         /// <returns></returns>
-        Task<IServiceResult> Translate(string text);
+        Task<IServiceResult> Translate(string text, string from = "en", string to = "vi");
     }
 }
