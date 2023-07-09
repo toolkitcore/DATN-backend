@@ -242,8 +242,9 @@ namespace HUST.Core.Services
         /// Text to speech
         /// </summary>
         /// <param name="text"></param>
+        /// <param name="lang"></param>
         /// <returns></returns>
-        public async Task<IServiceResult> TextToSpeech(string text)
+        public async Task<IServiceResult> TextToSpeech(string text, string lang = "en")
         {
             var res = new ServiceResult();
 
@@ -271,7 +272,7 @@ namespace HUST.Core.Services
             }
 
             // Call api
-            var client = new RestClient(string.Format(url, text));
+            var client = new RestClient(string.Format(url, text, lang));
             var request = new RestRequest();
             request.AddHeader(AuthKey.HelperAppApiKey, key); // Add key vào header
             var response = await client.GetAsync(request);
@@ -292,11 +293,12 @@ namespace HUST.Core.Services
         }
 
         /// <summary>
-        /// Lấy kết quả request free dictionaryapi
+        /// Text to speech
         /// </summary>
         /// <param name="text"></param>
+        /// <param name="lang"></param>
         /// <returns></returns>
-        public async Task<byte[]> TextToSpeechStream(string text)
+        public async Task<byte[]> TextToSpeechStream(string text, string lang = "en")
         {
             // Kiểm tra đầu vào
             if (string.IsNullOrWhiteSpace(text))
@@ -322,7 +324,7 @@ namespace HUST.Core.Services
             }
 
             // Call api
-            var client = new RestClient(string.Format(url, text));
+            var client = new RestClient(string.Format(url, text, lang));
             var request = new RestRequest();
             request.AddHeader(AuthKey.HelperAppApiKey, key); // Add key vào header
             var response = await client.GetAsync(request);
@@ -342,8 +344,10 @@ namespace HUST.Core.Services
         /// Translate
         /// </summary>
         /// <param name="text"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
         /// <returns></returns>
-        public async Task<IServiceResult> Translate(string text)
+        public async Task<IServiceResult> Translate(string text, string from = "en", string to = "vi")
         {
             var res = new ServiceResult();
 
@@ -371,7 +375,7 @@ namespace HUST.Core.Services
             }
 
             // Call api
-            var client = new RestClient(string.Format(url, text));
+            var client = new RestClient(string.Format(url, text, from, to));
             var request = new RestRequest();
             request.AddHeader(AuthKey.HelperAppApiKey, key); // Add key vào header
 

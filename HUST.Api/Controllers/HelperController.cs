@@ -88,12 +88,12 @@ namespace HUST.Api.Controllers
         /// <param name="text"></param>
         /// <returns></returns>
         [HttpGet("tts")]
-        public async Task<IServiceResult> TextToSpeech(string text)
+        public async Task<IServiceResult> TextToSpeech(string text, string lang = "en")
         {
             var res = new ServiceResult();
             try
             {
-                return await _service.TextToSpeech(text);
+                return await _service.TextToSpeech(text, lang);
             }
             catch (Exception ex)
             {
@@ -109,12 +109,12 @@ namespace HUST.Api.Controllers
         /// <param name="text"></param>
         /// <returns></returns>
         [HttpGet("tts/stream")]
-        public async Task<IActionResult> TextToSpeechStream(string text)
+        public async Task<IActionResult> TextToSpeechStream(string text, string lang = "en")
         {
             var res = new ServiceResult();
             try
             {
-                var fileBytes = await _service.TextToSpeechStream(text);
+                var fileBytes = await _service.TextToSpeechStream(text, lang);
                 if(fileBytes != null && fileBytes.Length > 0)
                 {
                     return File(fileBytes, FileContentType.Audio, "audio");
@@ -134,12 +134,12 @@ namespace HUST.Api.Controllers
         /// <param name="text"></param>
         /// <returns></returns>
         [HttpGet("translate")]
-        public async Task<IServiceResult> Translate(string text)
+        public async Task<IServiceResult> Translate(string text, string from = "en", string to = "vi")
         {
             var res = new ServiceResult();
             try
             {
-                return await _service.Translate(text);
+                return await _service.Translate(text, from, to);
             }
             catch (Exception ex)
             {
