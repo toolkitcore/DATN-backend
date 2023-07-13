@@ -60,7 +60,8 @@ namespace HUST.Core.Extensions
                             OnMessageReceived = context =>
                             {
                                 string sessionId = null;
-                                if(context.HttpContext.Request.Cookies.ContainsKey(AuthKey.SessionId))
+                                if(context.HttpContext.Request.Cookies.ContainsKey(AuthKey.SessionId) 
+                                || !context.HttpContext.Request.Headers.ContainsKey(AuthKey.SessionId))
                                 {
                                     var cookieSessionId = context.HttpContext.Request.Cookies[AuthKey.SessionId];
                                     context.HttpContext.Request.Headers.Add(AuthKey.SessionId, cookieSessionId);
