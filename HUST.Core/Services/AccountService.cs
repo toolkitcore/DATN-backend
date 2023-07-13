@@ -33,9 +33,9 @@ namespace HUST.Core.Services
         private readonly IMemoryCache _memCache;
         private readonly ISessionService _sessionService;
         private readonly IMailService _mailService;
-
-        private const string CallbackLinkActivateAccount = "http://localhost:3000/activate-account/";
-        private const string CallbackLinkResetPassword = "http://localhost:3000/reset-password/";
+        private readonly string UIAppUrl;
+        private readonly string CallbackLinkActivateAccount;
+        private readonly string CallbackLinkResetPassword;
 
         #endregion
 
@@ -57,6 +57,10 @@ namespace HUST.Core.Services
             _memCache = memCache;
             _sessionService = sessionService;
             _mailService = mailService;
+
+            UIAppUrl = this.ServiceCollection.ConfigUtil.GetAPIUrl(UIAppConfigs.Url);
+            CallbackLinkActivateAccount = UIAppUrl + "/activate-account/";
+            CallbackLinkResetPassword = UIAppUrl + "/reset-password/";
         }
 
         #endregion

@@ -55,4 +55,9 @@ namespace HUST.Core.Constants
         public const string TextToSpeechUrl = "HelperApp:TextToSpeechUrl";
         public const string TranslateTestUrl = "HelperApp:TranslateTestUrl";
     }
+
+    public class UIAppConfigs
+    {
+        public const string Url = "UIApp:Url";
+    }
 }
