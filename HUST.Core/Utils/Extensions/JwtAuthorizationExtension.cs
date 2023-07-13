@@ -61,7 +61,7 @@ namespace HUST.Core.Extensions
                             {
                                 string sessionId = null;
                                 if(context.HttpContext.Request.Cookies.ContainsKey(AuthKey.SessionId) 
-                                || !context.HttpContext.Request.Headers.ContainsKey(AuthKey.SessionId))
+                                && !context.HttpContext.Request.Headers.ContainsKey(AuthKey.SessionId))
                                 {
                                     var cookieSessionId = context.HttpContext.Request.Cookies[AuthKey.SessionId];
                                     context.HttpContext.Request.Headers.Add(AuthKey.SessionId, cookieSessionId);
@@ -72,7 +72,7 @@ namespace HUST.Core.Extensions
                                     sessionId = context.HttpContext.Request.Headers[AuthKey.SessionId];
                                 }
 
-                                if(!string.IsNullOrEmpty(sessionId))
+                                if(!string.IsNullOrEmpty(sessionId) && !context.HttpContext.Request.Headers.ContainsKey(AuthKey.Authorization))
                                 {
                                     var sp = services.BuildServiceProvider();
                                     var sessionService = sp.GetService<ISessionService>();
