@@ -22,6 +22,10 @@ namespace HUST.Core.Constants
         public const string JwtLifeTime = "JwtLifeTime";
         public const string SecretKey = "SecretKey";
 
+        public const string ConvertImageToWebp = "ConvertImageToWebp";
+
+        public const string AlwaysShowDevMsg = "AlwaysShowDevMsg";
+
         public class FirebaseConfigs {
             public const string Email = "FirebaseConfigs:Email";
             public const string Password = "FirebaseConfigs:Password";

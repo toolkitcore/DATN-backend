@@ -14,6 +14,7 @@ namespace HUST.Core.Constants
         public static string Environment = null;
         public static bool IsDevelopment = false;
         public static string ContentRootPath = "";
+        public static bool AlwaysShowDevMesg = false;
 
         public static readonly int ConnectionTimeout = 999;
 

@@ -12,6 +12,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using User = HUST.Core.Models.DTO.User;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Webp;
 
 namespace HUST.Core.Services
 {
@@ -141,11 +143,26 @@ namespace HUST.Core.Services
                     using (var ms = new MemoryStream())
                     {
                         param.Avatar.CopyTo(ms);
-                        var fileBytes = ms.ToArray();
 
-                        // Để bảo mật hơn thì dùng Guid.NewGuid().ToString()
-                        // Để tiện hơn thì dùng luôn user id (đè lại, không cần xóa ảnh cũ)
-                        avatarLink = await _storage.UploadAsync(StoragePath.Avatar, userId.ToString(), fileBytes);
+                        // PTHIEU 14.07.2023: Convert ảnh sang webp (tùy thuộc cấu hình appsetting)
+                        var convertRes = bool.TryParse(this.ServiceCollection.ConfigUtil.GetAppSetting(AppSettingKey.ConvertImageToWebp), out var isConvertImageToWebp);
+                        if(convertRes && isConvertImageToWebp)
+                        {
+                            ms.Position = 0;
+                            using var myImage = await Image.LoadAsync(ms);
+                            using var outStream = new MemoryStream();
+                            await myImage.SaveAsync(outStream, new WebpEncoder());
+                            avatarLink = await _storage.UploadAsync(StoragePath.Avatar, userId.ToString(), outStream.ToArray());
+                        } 
+                        else
+                        {
+                            var fileBytes = ms.ToArray();
+
+                            // Để bảo mật hơn thì dùng Guid.NewGuid().ToString()
+                            // Để tiện hơn thì dùng luôn user id (đè lại, không cần xóa ảnh cũ)
+                            avatarLink = await _storage.UploadAsync(StoragePath.Avatar, userId.ToString(), fileBytes);
+                        }
+
                     }
 
                     // Xóa ảnh cũ

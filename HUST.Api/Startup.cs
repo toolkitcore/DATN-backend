@@ -67,6 +67,11 @@ namespace HUST.Api
             GlobalConfig.ContentRootPath = env.ContentRootPath;
             GlobalConfig.IsDevelopment = env.IsDevelopment();
             GlobalConfig.Environment = env.EnvironmentName;
+
+            // PTHIEU 14.07.2023: Cấu hình show dev message (exception) bất kể môi trường (kể cả production)
+            var convertRes = bool.TryParse(Configuration.GetSection(AppSettingKey.AppSettingsSection)[AppSettingKey.AlwaysShowDevMsg], out var isAlwaysShowDevMesg);
+            GlobalConfig.AlwaysShowDevMesg = convertRes && isAlwaysShowDevMesg;
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
