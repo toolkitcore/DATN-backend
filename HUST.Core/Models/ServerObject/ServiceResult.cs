@@ -69,7 +69,7 @@ namespace HUST.Core.Models.ServerObject
         {
             this.Status = ServiceResultStatus.Exception;
 
-            if(GlobalConfig.IsDevelopment)
+            if(GlobalConfig.IsDevelopment || GlobalConfig.AlwaysShowDevMesg)
             {
                 this.DevMessage = $"{this.Message} {exception.Message}";
             }
