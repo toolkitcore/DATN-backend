@@ -14,6 +14,8 @@ using System.Threading.Tasks;
 using User = HUST.Core.Models.DTO.User;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Webp;
+using HUST.Core.Interfaces.Util;
+using HUST.Core.Interfaces.InfrastructureService;
 
 namespace HUST.Core.Services
 {
@@ -25,14 +27,14 @@ namespace HUST.Core.Services
         #region Field
 
         private readonly IUserRepository _repository;
-        private readonly StorageUtil _storage;
+        private readonly IStorageService _storage;
         #endregion
 
         #region Constructor
 
         public UserService(IUserRepository userRepository,
             IHustServiceCollection serviceCollection,
-            StorageUtil storage) : base(serviceCollection)
+            IStorageService storage) : base(serviceCollection)
         {
             _repository = userRepository;
             _storage = storage;

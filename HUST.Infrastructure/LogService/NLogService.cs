@@ -4,15 +4,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HUST.Core.Interfaces.InfrastructureService;
+using HUST.Core.Interfaces.Util;
 using NLog;
 
-namespace HUST.Core.Utils
+namespace HUST.Infrastructure.LogService
 {
     /// <summary>
     /// Lớp xử lý việc ghi log (sử dụng NLog)
     /// Nhược điểm là thông tin class Logger sẽ luôn  hiển thị là HUST.Core.Utils.LogUtil 
     /// </summary>
-    public class LogUtil : ILogUtil
+    public class NLogService : ILogService
     {
         #region Declaration
 
@@ -22,7 +24,7 @@ namespace HUST.Core.Utils
 
         #region Constructor
         
-        public LogUtil()
+        public NLogService()
         {
             _logger = LogManager.GetCurrentClassLogger();
         }

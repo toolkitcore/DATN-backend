@@ -1,4 +1,4 @@
-﻿using HUST.Core.Interfaces.Service;
+﻿using HUST.Core.Interfaces.InfrastructureService;
 using HUST.Core.Models.Param;
 using HUST.Core.Settings;
 using MailKit.Net.Smtp;
@@ -14,7 +14,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HUST.Core.Services
+namespace HUST.Infrastructure.MailService
 {
     public class MailService : IMailService
     {

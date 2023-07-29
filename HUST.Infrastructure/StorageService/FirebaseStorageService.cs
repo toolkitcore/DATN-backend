@@ -1,6 +1,7 @@
 ﻿using Firebase.Auth;
 using Firebase.Storage;
 using HUST.Core.Constants;
+using HUST.Core.Interfaces.InfrastructureService;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -8,9 +9,9 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace HUST.Core.Utils
+namespace HUST.Infrastructure.StorageService
 {
-    public class StorageUtil
+    public class FirebaseStorageService : IStorageService
     {
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _environment;
@@ -21,7 +22,7 @@ namespace HUST.Core.Utils
 
         private string Storage { get; set; }
 
-        public StorageUtil(IConfiguration configuration, IWebHostEnvironment environment)
+        public FirebaseStorageService(IConfiguration configuration, IWebHostEnvironment environment)
         {
             _configuration = configuration;
             _environment = environment;

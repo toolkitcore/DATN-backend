@@ -1,4 +1,5 @@
-﻿using HUST.Core.Utils;
+﻿using HUST.Core.Interfaces.Util;
+using HUST.Core.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

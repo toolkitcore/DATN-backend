@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using HUST.Core.Interfaces.InfrastructureService;
+using HUST.Core.Utils;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Distributed;
 using System;
 using System.Collections.Generic;
@@ -6,18 +8,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HUST.Core.Utils
+namespace HUST.Infrastructure.CacheService
 {
     /// <summary>
     /// Lớp hỗ trợ DistributedCache
     /// </summary>
-    public class DistributedCacheUtil : IDistributedCacheUtil
+    public class DistributedCacheService : IDistributedCacheService
     {
         //private readonly IHustDistributedCache _cache;
         private readonly IDistributedCache _cache;
         private readonly IWebHostEnvironment _environment;
 
-        public DistributedCacheUtil(IDistributedCache cache, IWebHostEnvironment environment)
+        public DistributedCacheService(IDistributedCache cache, IWebHostEnvironment environment)
         {
             _cache = cache;
             _environment = environment;

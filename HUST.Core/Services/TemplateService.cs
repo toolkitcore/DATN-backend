@@ -1,12 +1,14 @@
 ﻿using HUST.Core.Constants;
 using HUST.Core.Enums;
+using HUST.Core.Extensions;
+using HUST.Core.Interfaces.InfrastructureService;
 using HUST.Core.Interfaces.Repository;
 using HUST.Core.Interfaces.Service;
+using HUST.Core.Interfaces.Util;
 using HUST.Core.Models.DTO;
 using HUST.Core.Models.Entity;
 using HUST.Core.Models.ServerObject;
 using HUST.Core.Utils;
-using HUST.Core.Utils.Extensions;
 using Microsoft.AspNetCore.Http;
 using OfficeOpenXml;
 using System;
@@ -25,7 +27,7 @@ namespace HUST.Core.Services
     {
         #region Field
         private readonly ICacheSqlUtil _cacheSql;
-        private readonly StorageUtil _storage;
+        private readonly IStorageService _storage;
         private readonly IDictionaryRepository _repository;
         private readonly IMailService _mailService;
         private readonly IUserConfigService _userConfigService;
@@ -36,7 +38,7 @@ namespace HUST.Core.Services
 
         public TemplateService(
             ICacheSqlUtil cacheSql,
-            StorageUtil storage,
+            IStorageService storage,
             IDictionaryRepository dictionaryRepository,
             IMailService mailService,
             IUserConfigService userConfigService,

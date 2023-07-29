@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HUST.Core.Interfaces.Service
+namespace HUST.Core.Interfaces.InfrastructureService
 {
     public interface IMailService
     {

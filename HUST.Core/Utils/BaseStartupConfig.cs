@@ -2,6 +2,7 @@
 using HUST.Core.Extensions;
 using HUST.Core.Interfaces.Repository;
 using HUST.Core.Interfaces.Service;
+using HUST.Core.Interfaces.Util;
 using HUST.Core.Services;
 using HUST.Core.Settings;
 using Microsoft.Extensions.Configuration;
@@ -33,48 +34,21 @@ namespace HUST.Core.Utils
                     options.SerializerSettings.ContractResolver = null;
                 });
 
-            // Cache mem
-            services.AddMemoryCache();
-
-            // Cache redis
-            var redisCache = configuration.GetConnectionString(ConnectionStringSettingKey.RedisCache);
-            if (!string.IsNullOrEmpty(redisCache))
-            {
-                services.AddStackExchangeRedisCache(option =>
-                {
-                    option.Configuration = redisCache;
-                    option.InstanceName = CacheKey.HustInstanceCache;
-                });
-            }
-            else
-            {
-                services.AddDistributedMemoryCache();
-            }
-            services.AddTransient<IDistributedCacheUtil, DistributedCacheUtil>();
-
+            
             // Cache sql
             services.AddTransient<ICacheSqlUtil, CacheSqlUtil>();
 
             // Session service
             services.AddSingleton<ISessionService, SessionService>();
 
-            // Storage
-            services.AddScoped<StorageUtil>();
-
             // Đăng nhập bằng jwt
             services.AddJwtAuthorization(configuration);
-
-            // Add send mail service
-            services.Configure<MailSettings>(configuration.GetSection(AppSettingKey.MailSettingsSection));
-            services.AddTransient<IMailService, MailService>();
-
-
+            
             // Inject service mapper, auth, cache
             services.UseAutoMapper();
             services.AddHttpContextAccessor();
             services.AddSingleton<IConfigUtil, ConfigUtil>();
             services.AddTransient<IAuthUtil, AuthUtil>();
-            services.AddTransient<ILogUtil, LogUtil>();
             services.AddTransient<IHustServiceCollection, HustServiceCollection>();
         }
     }
