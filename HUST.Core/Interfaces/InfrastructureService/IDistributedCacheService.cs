@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HUST.Core.Utils
+namespace HUST.Core.Interfaces.InfrastructureService
 {
     /// <summary>
     /// Interface định nghĩa lớp distributed cache
     /// </summary>
-    public interface IDistributedCacheUtil
+    public interface IDistributedCacheService
     {
 
         /// <summary>

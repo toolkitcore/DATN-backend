@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HUST.Core.Utils.Extensions
+namespace HUST.Core.Extensions
 {
     public static class EpplusExtension
     {

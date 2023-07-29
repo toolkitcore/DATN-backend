@@ -14,6 +14,7 @@ using System.Text;
 using HUST.Core.Models.Entity;
 using System.ComponentModel;
 using System.Linq;
+using HUST.Core.Interfaces.Util;
 
 namespace HUST.Infrastructure.Repositories
 {

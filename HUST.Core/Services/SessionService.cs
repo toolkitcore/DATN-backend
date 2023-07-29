@@ -1,4 +1,5 @@
 ﻿using HUST.Core.Constants;
+using HUST.Core.Interfaces.InfrastructureService;
 using HUST.Core.Interfaces.Service;
 using HUST.Core.Utils;
 using Microsoft.Extensions.Configuration;
@@ -15,10 +16,10 @@ namespace HUST.Core.Services
     /// </summary>
     public class SessionService : ISessionService
     {
-        private readonly IDistributedCacheUtil _cache;
+        private readonly IDistributedCacheService _cache;
         private readonly IConfiguration _configuration;
 
-        public SessionService(IDistributedCacheUtil cache, IConfiguration configuration)
+        public SessionService(IDistributedCacheService cache, IConfiguration configuration)
         {
             _cache = cache;
             _configuration = configuration;

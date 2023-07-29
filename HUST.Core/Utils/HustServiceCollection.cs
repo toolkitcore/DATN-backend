@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using HUST.Core.Interfaces.InfrastructureService;
+using HUST.Core.Interfaces.Util;
 using HUST.Core.Models.ServerObject;
 using System;
 using System.Collections.Generic;
@@ -12,13 +14,13 @@ namespace HUST.Core.Utils
     {
         public IConfigUtil ConfigUtil { get; set; }
         public IAuthUtil AuthUtil { get; set; }
-        public IDistributedCacheUtil CacheUtil { get; set; }
+        public IDistributedCacheService CacheUtil { get; set; }
         public IMapper Mapper { get; set; }
 
-        public ILogUtil LogUtil { get; set; }
+        public ILogService LogUtil { get; set; }
 
 
-        public HustServiceCollection(IConfigUtil configUtil, IAuthUtil authUtil, IDistributedCacheUtil cacheUtil, IMapper mapper, ILogUtil logUtil)
+        public HustServiceCollection(IConfigUtil configUtil, IAuthUtil authUtil, IDistributedCacheService cacheUtil, IMapper mapper, ILogService logUtil)
         {
             ConfigUtil = configUtil;
             AuthUtil = authUtil;

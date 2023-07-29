@@ -5,7 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Net;
 
-namespace HUST.Core.Utils
+namespace HUST.Api.Filters
 {
     public class ThrottleAttribute : ActionFilterAttribute
     {

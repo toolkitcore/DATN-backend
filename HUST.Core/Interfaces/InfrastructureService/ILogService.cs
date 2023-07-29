@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HUST.Core.Utils
+namespace HUST.Core.Interfaces.InfrastructureService
 {
-    public interface ILogUtil
+    public interface ILogService
     {
         void LogTrace(string msg);
 

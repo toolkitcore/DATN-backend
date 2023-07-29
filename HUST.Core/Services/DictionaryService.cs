@@ -1,7 +1,9 @@
 ﻿using HUST.Core.Constants;
 using HUST.Core.Enums;
+using HUST.Core.Interfaces.InfrastructureService;
 using HUST.Core.Interfaces.Repository;
 using HUST.Core.Interfaces.Service;
+using HUST.Core.Interfaces.Util;
 using HUST.Core.Models.DTO;
 using HUST.Core.Models.Entity;
 using HUST.Core.Models.Param;
@@ -30,14 +32,14 @@ namespace HUST.Core.Services
 
         private readonly IDictionaryRepository _repository;
         private readonly IAccountService _accountService;
-        private readonly StorageUtil _storage;
+        private readonly IStorageService _storage;
         #endregion
 
         #region Constructor
 
         public DictionaryService(IDictionaryRepository dictionaryRepository,
             IAccountService accountService,
-            StorageUtil storage,
+            IStorageService storage,
             IHustServiceCollection serviceCollection) : base(serviceCollection)
         {
             _repository = dictionaryRepository;

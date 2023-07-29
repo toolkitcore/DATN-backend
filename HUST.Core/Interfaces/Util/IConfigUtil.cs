@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HUST.Core.Utils
+namespace HUST.Core.Interfaces.Util
 {
     public interface IConfigUtil
     {

@@ -1,9 +1,15 @@
 ﻿using HUST.Core.Constants;
+using HUST.Core.Interfaces.InfrastructureService;
 using HUST.Core.Interfaces.Repository;
 using HUST.Core.Interfaces.Service;
 using HUST.Core.Services;
+using HUST.Core.Settings;
 using HUST.Core.Utils;
+using HUST.Infrastructure.CacheService;
+using HUST.Infrastructure.LogService;
+using HUST.Infrastructure.MailService;
 using HUST.Infrastructure.Repositories;
+using HUST.Infrastructure.StorageService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -33,6 +39,37 @@ namespace HUST.Api
 
             // Tránh lỗi CORS
             services.AddCors();
+
+            // Cache mem
+            services.AddMemoryCache();
+
+            // Cache redis
+            var redisCache = Configuration.GetConnectionString(ConnectionStringSettingKey.RedisCache);
+            if (!string.IsNullOrEmpty(redisCache))
+            {
+                services.AddStackExchangeRedisCache(option =>
+                {
+                    option.Configuration = redisCache;
+                    option.InstanceName = CacheKey.HustInstanceCache;
+                });
+            }
+            else
+            {
+                services.AddDistributedMemoryCache();
+            }
+
+            // Distributed cache
+            services.AddTransient<IDistributedCacheService, DistributedCacheService>();
+
+            // Add send mail service
+            services.Configure<MailSettings>(Configuration.GetSection(AppSettingKey.MailSettingsSection));
+            services.AddTransient<IMailService, MailService>();
+
+            // Storage
+            services.AddScoped<IStorageService, FirebaseStorageService>();
+
+            // Log
+            services.AddTransient<ILogService, NLogService>();
 
             // Thiết lập các cấu hình theo base config
             BaseStartupConfig.ConfigureServices(ref services, Configuration);
